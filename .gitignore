@@ -1,0 +1,80 @@
+# =======================
+# Python
+# =======================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+*.egg-link
+.installed.cfg
+lib/
+lib64/
+parts/
+var/
+sdist/
+wheels/
+*.manifest
+*.spec
+pip-wheel-metadata/
+share/python-wheels/
+
+# =======================
+# Virtual Environments
+# =======================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =======================
+# Django
+# =======================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/backend/staticfiles/
+/backend/media/
+/backend/logs/*.log
+
+# =======================
+# Docker
+# =======================
+.docker/
+
+# =======================
+# IDE / Editor
+# =======================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =======================
+# Segurança - NUNCA commitar
+# =======================
+.env
+.env.local
+.env.production
+*.pem
+*.key
+secrets/
+
+# =======================
+# Node (se usar frontend build)
+# =======================
+node_modules/
+npm-debug.log*

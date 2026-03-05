@@ -1,0 +1,333 @@
+{% extends "base/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <!-- Header do Dashboard -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="bi bi-speedometer2 text-primary me-2"></i>
+                Painel de Controle
+            </h4>
+            <p class="text-muted mb-0">
+                Olá, <strong>{{ request.user.first_name|default:request.user.username }}</strong>!
+                Hoje é {% now "l, d \d\e F \d\e Y" %}.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if request.user.pode_aprovar_reservas %}
+            <a href="/reservas/pendentes/" class="btn btn-warning btn-sm position-relative">
+                <i class="bi bi-clock me-1"></i>Pendentes
+                {% if stats.pendentes > 0 %}
+                <span class="badge bg-danger rounded-pill ms-1">{{ stats.pendentes }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+            <a href="/reservas/nova/" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nova Reserva
+            </a>
+        </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-blue">
+                <div class="metric-icon"><i class="bi bi-door-open"></i></div>
+                <div class="metric-info">
+                    <div class="metric-value">{{ stats.total_salas }}</div>
+                    <div class="metric-label">Total de Salas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-green">
+                <div class="metric-icon"><i class="bi bi-calendar-check"></i></div>
+                <div class="metric-info">
+                    <div class="metric-value">{{ stats.reservas_hoje }}</div>
+                    <div class="metric-label">Reservas Hoje</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card metric-purple">
+                <div class="metric-icon"><i class="bi bi-calendar-week"></i></div>
+                <div class="metric-info">
+                    <div class="metric-value">{{ stats.reservas_semana }}</div>
+                    <div class="metric-label">Reservas na Semana</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card {% if stats.pendentes > 0 %}metric-orange{% else %}metric-gray{% endif %}">
+                <div class="metric-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div class="metric-info">
+                    <div class="metric-value">{{ stats.pendentes }}</div>
+                    <div class="metric-label">Aguardando Aprovação</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Coluna principal -->
+        <div class="col-xl-8">
+
+            <!-- Pendentes de aprovação (admins) -->
+            {% if pendentes_aprovacao %}
+            <div class="card shadow-sm border-0 rounded-3 mb-3">
+                <div class="card-header bg-warning bg-opacity-10 border-warning border-opacity-25 py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="fw-semibold mb-0">
+                            <i class="bi bi-hourglass text-warning me-2"></i>
+                            Reservas Aguardando Aprovação
+                        </h6>
+                        <a href="/reservas/pendentes/" class="btn btn-warning btn-sm">Ver Todas</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sala</th>
+                                    <th>Solicitante</th>
+                                    <th>Data/Hora</th>
+                                    <th>Disciplina</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for r in pendentes_aprovacao %}
+                            <tr>
+                                <td>
+                                    <span class="fw-medium">{{ r.sala.codigo }}</span>
+                                    <small class="text-muted d-block">{{ r.sala.andar.predio.codigo }}</small>
+                                </td>
+                                <td>{{ r.solicitante.first_name }} {{ r.solicitante.last_name|slice:":1" }}.</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ r.data_inicio|date:"d/m" }}</span>
+                                    {{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}
+                                </td>
+                                <td>
+                                    {% if r.turma %}
+                                        <small>{{ r.turma.disciplina.codigo }}</small>
+                                    {% else %}
+                                        <small class="text-muted">{{ r.motivo|truncatechars:20 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="/reservas/{{ r.pk }}/aprovar/" class="btn btn-success btn-xs">
+                                            <i class="bi bi-check"></i>
+                                        </a>
+                                        <a href="/reservas/{{ r.pk }}/rejeitar/" class="btn btn-danger btn-xs">
+                                            <i class="bi bi-x"></i>
+                                        </a>
+                                        <a href="/reservas/{{ r.pk }}/" class="btn btn-light btn-xs">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reservas de Hoje (admin) -->
+            {% if reservas_hoje %}
+            <div class="card shadow-sm border-0 rounded-3 mb-3">
+                <div class="card-header py-3">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-calendar-day text-primary me-2"></i>
+                        Agenda de Hoje
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Horário</th>
+                                    <th>Sala</th>
+                                    <th>Disciplina/Motivo</th>
+                                    <th>Responsável</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for r in reservas_hoje %}
+                            <tr>
+                                <td class="fw-medium">{{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}</td>
+                                <td>
+                                    <span class="fw-medium">{{ r.sala.nome }}</span>
+                                    <small class="text-muted d-block">{{ r.sala.andar.predio.codigo }}</small>
+                                </td>
+                                <td>{{ r.turma.disciplina.nome|default:r.motivo|truncatechars:30 }}</td>
+                                <td>{{ r.solicitante.first_name }}</td>
+                                <td>
+                                    <span class="badge status-{{ r.status }}">
+                                        {{ r.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Minhas Reservas -->
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-calendar3 text-primary me-2"></i>
+                        Minhas Reservas Recentes
+                    </h6>
+                    <a href="/reservas/" class="btn btn-outline-primary btn-sm">Ver Todas</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if minhas_reservas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sala</th>
+                                    <th>Data/Hora</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for r in minhas_reservas %}
+                            <tr>
+                                <td class="text-muted small">#{{ r.pk }}</td>
+                                <td>
+                                    <span class="fw-medium">{{ r.sala.nome }}</span>
+                                    <small class="text-muted d-block">{{ r.sala.get_tipo_display }}</small>
+                                </td>
+                                <td>
+                                    {{ r.data_inicio|date:"d/m/Y" }}<br>
+                                    <small class="text-muted">{{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    <a href="/reservas/{{ r.pk }}/" class="btn btn-light btn-xs">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-x text-muted" style="font-size:3rem"></i>
+                        <p class="text-muted mt-3">Nenhuma reserva encontrada.</p>
+                        <a href="/reservas/nova/" class="btn btn-primary">
+                            <i class="bi bi-plus me-1"></i>Criar Primeira Reserva
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna lateral -->
+        <div class="col-xl-4">
+            <!-- Notificações -->
+            <div class="card shadow-sm border-0 rounded-3 mb-3">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-bell text-primary me-2"></i>
+                        Notificações
+                        {% if notificacoes %}
+                        <span class="badge bg-danger ms-1">{{ notificacoes|length }}</span>
+                        {% endif %}
+                    </h6>
+                    <a href="/notificacoes/" class="btn btn-link btn-sm p-0 text-muted">Ver todas</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if notificacoes %}
+                    <ul class="list-group list-group-flush">
+                        {% for n in notificacoes %}
+                        <li class="list-group-item list-group-item-action px-3 py-2 {% if not n.lida %}notif-unread{% endif %}">
+                            <div class="d-flex gap-2">
+                                <div class="notif-icon notif-{{ n.tipo }}">
+                                    {% if 'aprovada' in n.tipo %}<i class="bi bi-check-circle"></i>
+                                    {% elif 'rejeitada' in n.tipo %}<i class="bi bi-x-circle"></i>
+                                    {% elif 'override' in n.tipo %}<i class="bi bi-exclamation-triangle"></i>
+                                    {% else %}<i class="bi bi-bell"></i>{% endif %}
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-medium small text-truncate">{{ n.titulo }}</div>
+                                    <div class="text-muted" style="font-size:.75rem">{{ n.criado_em|timesince }} atrás</div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-bell-slash text-muted fs-3"></i>
+                        <p class="text-muted small mt-2">Nenhuma notificação</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acesso rápido -->
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="bi bi-lightning text-warning me-2"></i>
+                        Acesso Rápido
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/reservas/nova/" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Nova Reserva
+                        </a>
+                        <a href="/salas/" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-door-open me-2"></i>Ver Salas
+                        </a>
+                        <a href="/dashboard/ocupacao/" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-bar-chart me-2"></i>Ocupação por Sala
+                        </a>
+                        {% if request.user.is_responsavel %}
+                        <hr class="my-1">
+                        <a href="/importacao/" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-upload me-2"></i>Importar Planejamento CSV
+                        </a>
+                        <a href="/reservas/pendentes/" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-clock me-2"></i>Aprovar Pendentes
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/static/js/igc_dashboard.js"></script>
+{% endblock %}

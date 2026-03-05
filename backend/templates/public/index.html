@@ -1,0 +1,202 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Busca de Salas e Laboratórios{% endblock %}
+
+{% block extra_css %}
+<link href="/static/css/igc_public.css" rel="stylesheet">
+{% endblock %}
+
+{% block main_class %}public-page{% endblock %}
+
+{% block content %}
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="container position-relative">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <div class="hero-badge mb-3">
+                    <i class="bi bi-building me-1"></i>
+                    Instituto de Geociências — UFMG
+                </div>
+                <h1 class="hero-title">
+                    Encontre Salas e<br>
+                    <span class="text-gradient">Laboratórios</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Busque salas, laboratórios, professores, turmas e disciplinas.
+                    Veja a agenda semanal em tempo real.
+                </p>
+
+                <!-- ===== BUSCA PRINCIPAL ===== -->
+                <div class="search-container mt-4">
+                    <div class="search-box">
+                        <div class="search-icon">
+                            <i class="bi bi-search" id="searchIcon"></i>
+                            <div class="spinner-border spinner-border-sm text-primary d-none" id="searchSpinner"></div>
+                        </div>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="search-input"
+                            placeholder="Buscar sala, laboratório, professor, turma..."
+                            autocomplete="off"
+                            autofocus
+                        >
+                        <div class="search-filters" id="filterTags">
+                            <button class="filter-tag active" data-tipo="todos">Todos</button>
+                            <button class="filter-tag" data-tipo="sala">Salas</button>
+                            <button class="filter-tag" data-tipo="laboratorio">Labs</button>
+                            <button class="filter-tag" data-tipo="professor">Professores</button>
+                            <button class="filter-tag" data-tipo="turma">Turmas</button>
+                        </div>
+                    </div>
+
+                    <!-- Resultados do autocomplete -->
+                    <div class="search-results" id="searchResults" style="display:none;">
+                        <div id="resultsContent"></div>
+                        <div class="search-footer" id="searchFooter" style="display:none;">
+                            <span id="totalResultados"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sugestões rápidas -->
+                <div class="quick-searches mt-3">
+                    <span class="text-muted small me-2">Sugestões:</span>
+                    <button class="quick-tag" onclick="buscarRapido('laboratório de geologia')">
+                        <i class="bi bi-flask me-1"></i>Lab. Geologia
+                    </button>
+                    <button class="quick-tag" onclick="buscarRapido('anfiteatro')">
+                        <i class="bi bi-people me-1"></i>Anfiteatro
+                    </button>
+                    <button class="quick-tag" onclick="buscarRapido('sala informática')">
+                        <i class="bi bi-pc-display me-1"></i>Informática
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ESTATÍSTICAS ===== -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-icon bg-primary">
+                        <i class="bi bi-door-open"></i>
+                    </div>
+                    <div class="stat-number">{{ total_salas }}</div>
+                    <div class="stat-label">Salas</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-icon bg-success">
+                        <i class="bi bi-flask"></i>
+                    </div>
+                    <div class="stat-number">{{ total_labs }}</div>
+                    <div class="stat-label">Laboratórios</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-icon bg-info">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                    <div class="stat-number">{{ total_professores }}</div>
+                    <div class="stat-label">Professores</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-icon bg-warning">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="stat-number" id="horaAtual">--:--</div>
+                    <div class="stat-label">Hora Atual</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PAINEL DE RESULTADO EXPANDIDO ===== -->
+<section class="result-panel py-4" id="resultPanel" style="display:none;">
+    <div class="container">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3">
+                <h5 class="mb-0 fw-semibold" id="panelTitle">
+                    <i class="bi bi-calendar3 me-2 text-primary"></i>
+                    <span id="panelTitleText">Agenda Semanal</span>
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="fecharPainel()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="card-body p-0" id="panelContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5">Como usar o sistema</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="how-card">
+                    <div class="how-number">1</div>
+                    <h5>Busque</h5>
+                    <p class="text-muted">Digite o nome da sala, laboratório, professor ou turma no campo de busca acima.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-card">
+                    <div class="how-number">2</div>
+                    <h5>Selecione</h5>
+                    <p class="text-muted">Clique no resultado para ver a agenda semanal completa e informações detalhadas.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-card">
+                    <div class="how-number">3</div>
+                    <h5>Reserve</h5>
+                    <p class="text-muted">Acesse com sua conta institucional para solicitar reservas de salas e laboratórios.</p>
+                </div>
+            </div>
+        </div>
+        {% if not user.is_authenticated %}
+        <div class="text-center mt-4">
+            <a href="/entrar/" class="btn btn-primary btn-lg px-5 rounded-pill">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Fazer Login para Reservar
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/igc_busca.js"></script>
+<script>
+    // Atualizar hora em tempo real
+    function atualizarHora() {
+        const now = new Date();
+        document.getElementById('horaAtual').textContent =
+            now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    }
+    atualizarHora();
+    setInterval(atualizarHora, 1000);
+</script>
+{% endblock %}

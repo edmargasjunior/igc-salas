@@ -1,0 +1,363 @@
+/* ============================================================
+   IGC SALAS — CSS Tela Pública
+   ============================================================ */
+
+/* ===== HERO ===== */
+.hero-section {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #1e40af 70%, #0ea5e9 100%);
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 5rem 0 4rem;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.1) 0%, transparent 40%);
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+}
+
+.hero-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: white;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.75);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* ===== SEARCH BOX ===== */
+.search-container {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.search-box {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 1.1rem;
+    color: #64748b;
+    font-size: 1.2rem;
+    z-index: 2;
+}
+
+.search-input {
+    width: 100%;
+    padding: 1rem 1rem 0.5rem 3.5rem;
+    font-size: 1.05rem;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    color: #0f172a;
+}
+
+.search-input::placeholder {
+    color: #94a3b8;
+}
+
+.search-filters {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 0.75rem 1rem;
+    flex-wrap: wrap;
+    border-top: 1px solid #f1f5f9;
+}
+
+.filter-tag {
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    border: 1.5px solid #e2e8f0;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+}
+
+.filter-tag:hover {
+    border-color: #1e40af;
+    color: #1e40af;
+}
+
+.filter-tag.active {
+    background: #1e40af;
+    border-color: #1e40af;
+    color: white;
+}
+
+/* ===== SEARCH RESULTS ===== */
+.search-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-height: 480px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid #f8fafc;
+    text-decoration: none;
+    color: inherit;
+}
+
+.result-item:hover {
+    background: #f8fafc;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.result-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.result-icon.sala { background: #dbeafe; color: #1d4ed8; }
+.result-icon.laboratorio { background: #d1fae5; color: #059669; }
+.result-icon.professor { background: #ede9fe; color: #6d28d9; }
+.result-icon.turma { background: #fef3c7; color: #b45309; }
+.result-icon.disciplina { background: #fce7f3; color: #be185d; }
+
+.result-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0f172a;
+    margin: 0;
+}
+
+.result-sub {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.result-badge {
+    margin-left: auto;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.search-footer {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+    border-radius: 0 0 1rem 1rem;
+}
+
+.no-results {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+/* ===== QUICK SEARCHES ===== */
+.quick-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.85);
+    border-radius: 100px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 0.2rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.quick-tag:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+/* ===== STATS ===== */
+.stat-card {
+    background: white;
+    border-radius: var(--igc-radius-lg);
+    padding: 1.5rem 1rem;
+    box-shadow: var(--igc-shadow);
+    border: 1px solid var(--igc-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--igc-shadow-md);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: white;
+    margin: 0 auto 0.75rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--igc-text);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--igc-text-muted);
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+/* ===== RESULT PANEL ===== */
+.result-panel {
+    background: var(--igc-bg);
+}
+
+/* ===== AGENDA TABLE ===== */
+.agenda-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.agenda-day {
+    border-radius: var(--igc-radius);
+    overflow: hidden;
+    border: 1px solid var(--igc-border);
+}
+
+.agenda-day-header {
+    padding: 0.5rem;
+    background: var(--igc-primary);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.agenda-slot {
+    padding: 0.5rem;
+    border-top: 1px solid var(--igc-border);
+    font-size: 0.78rem;
+    background: white;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.agenda-slot:hover { background: #f8fafc; }
+
+.agenda-slot-vazio {
+    padding: 0.5rem;
+    color: var(--igc-text-muted);
+    text-align: center;
+    font-size: 0.75rem;
+    background: #fafafa;
+    border-top: 1px solid var(--igc-border);
+}
+
+/* ===== HOW IT WORKS ===== */
+.how-card {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: white;
+    border-radius: var(--igc-radius-lg);
+    border: 1px solid var(--igc-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.how-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--igc-shadow-md);
+}
+
+.how-number {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--igc-primary), var(--igc-secondary));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: 0 auto 1rem;
+}
+
+/* ===== SCROLLBAR ===== */
+.search-results::-webkit-scrollbar { width: 5px; }
+.search-results::-webkit-scrollbar-track { background: #f8fafc; }
+.search-results::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 576px) {
+    .hero-section { padding: 3rem 0 3rem; }
+    .search-filters { display: none; }
+    .stat-number { font-size: 1.5rem; }
+}

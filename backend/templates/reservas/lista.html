@@ -1,0 +1,49 @@
+{% extends "base/base.html" %}
+{% block title %}Minhas Reservas{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-calendar3 text-primary me-2"></i>Minhas Reservas</h4>
+        <a href="/reservas/nova/" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Nova Reserva</a>
+    </div>
+    <!-- Filtros -->
+    <form class="mb-3 d-flex gap-2">
+        <select name="status" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+            <option value="">Todos os status</option>
+            {% for val, label in status_choices %}<option value="{{ val }}" {% if status_filtro == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+    </form>
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-0">
+            {% if reservas %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>#</th><th>Sala</th><th>Data</th><th>Horário</th><th>Disciplina</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    {% for r in reservas %}
+                    <tr>
+                        <td class="text-muted small">#{{ r.pk }}</td>
+                        <td><strong>{{ r.sala.nome }}</strong><br><small class="text-muted">{{ r.sala.andar.predio.codigo }}</small></td>
+                        <td>{{ r.data_inicio|date:"d/m/Y" }}</td>
+                        <td>{{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}</td>
+                        <td>{{ r.turma.disciplina.nome|default:r.motivo|truncatechars:25 }}</td>
+                        <td><span class="badge status-{{ r.status }}">{{ r.get_status_display }}</span></td>
+                        <td><a href="/reservas/{{ r.pk }}/" class="btn btn-light btn-xs"><i class="bi bi-eye"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size:3rem"></i>
+                <p class="text-muted mt-3">Nenhuma reserva encontrada.</p>
+                <a href="/reservas/nova/" class="btn btn-primary">Criar Reserva</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

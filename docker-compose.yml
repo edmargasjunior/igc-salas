@@ -1,0 +1,169 @@
+services:
+
+  # ============================================================
+  # BANCO DE DADOS POSTGRESQL
+  # ============================================================
+  db:
+    image: postgres:16-alpine
+    container_name: igc_salas_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-igc_salas_db}
+      POSTGRES_USER: ${POSTGRES_USER:-igc_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-igc_salas_secure_pass_2025}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - igc_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-igc_admin} -d ${POSTGRES_DB:-igc_salas_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # REDIS (Cache + Celery Broker)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: igc_salas_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - igc_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # BACKEND DJANGO (Gunicorn)
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: igc_salas_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: igc_salas.settings.production
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    networks:
+      - igc_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # CELERY WORKER (Tarefas Assíncronas)
+  # ============================================================
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: igc_salas_celery
+    restart: unless-stopped
+    command: celery -A igc_salas worker -l info -c 2 -Q default,notificacoes
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: igc_salas.settings.production
+    volumes:
+      - ./backend:/app
+      - logs_volume:/app/logs
+    networks:
+      - igc_network
+    depends_on:
+      - backend
+      - redis
+      - db
+
+  # ============================================================
+  # CELERY BEAT (Tarefas Agendadas)
+  # ============================================================
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: igc_salas_beat
+    restart: unless-stopped
+    command: celery -A igc_salas beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: igc_salas.settings.production
+    volumes:
+      - ./backend:/app
+    networks:
+      - igc_network
+    depends_on:
+      - backend
+      - redis
+      - db
+
+  # ============================================================
+  # NGINX (Reverse Proxy)
+  # ============================================================
+  nginx:
+    image: nginx:alpine
+    container_name: igc_salas_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - igc_network
+    depends_on:
+      - backend
+
+# ============================================================
+# VOLUMES
+# ============================================================
+volumes:
+  postgres_data:
+    name: igc_salas_postgres_data
+  redis_data:
+    name: igc_salas_redis_data
+  static_volume:
+    name: igc_salas_static
+  media_volume:
+    name: igc_salas_media
+  logs_volume:
+    name: igc_salas_logs
+  nginx_logs:
+    name: igc_salas_nginx_logs
+
+# ============================================================
+# REDES
+# ============================================================
+networks:
+  igc_network:
+    name: igc_salas_network
+    driver: bridge

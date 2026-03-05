@@ -1,0 +1,61 @@
+{% extends "base/base.html" %}
+{% block title %}Reserva #{{ reserva.pk }}{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:800px">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/reservas/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <div>
+            <h4 class="fw-bold mb-0">Reserva #{{ reserva.pk }}</h4>
+            <span class="badge status-{{ reserva.status }} mt-1">{{ reserva.get_status_display }}</span>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-3 mb-3">
+                <div class="card-header py-3"><h6 class="mb-0 fw-semibold"><i class="bi bi-info-circle text-primary me-2"></i>Detalhes</h6></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Sala</dt><dd class="col-sm-8">{{ reserva.sala.nome }} — {{ reserva.sala.andar.predio.nome }}</dd>
+                        <dt class="col-sm-4 text-muted">Tipo</dt><dd class="col-sm-8">{{ reserva.get_tipo_display }}</dd>
+                        <dt class="col-sm-4 text-muted">Data</dt><dd class="col-sm-8">{{ reserva.data_inicio|date:"d/m/Y" }}</dd>
+                        <dt class="col-sm-4 text-muted">Horário</dt><dd class="col-sm-8">{{ reserva.hora_inicio|time:"H:i" }} – {{ reserva.hora_fim|time:"H:i" }}</dd>
+                        <dt class="col-sm-4 text-muted">Solicitante</dt><dd class="col-sm-8">{{ reserva.solicitante.get_full_name }}</dd>
+                        {% if reserva.turma %}<dt class="col-sm-4 text-muted">Turma</dt><dd class="col-sm-8">{{ reserva.turma }}</dd>{% endif %}
+                        {% if reserva.motivo %}<dt class="col-sm-4 text-muted">Motivo</dt><dd class="col-sm-8">{{ reserva.motivo }}</dd>{% endif %}
+                        {% if reserva.motivo_rejeicao %}<dt class="col-sm-4 text-muted text-danger">Motivo Rejeição</dt><dd class="col-sm-8 text-danger">{{ reserva.motivo_rejeicao }}</dd>{% endif %}
+                    </dl>
+                </div>
+            </div>
+            <!-- Ações -->
+            {% if request.user.pode_aprovar_reservas and reserva.status == 'pendente' %}
+            <div class="card shadow-sm border-0 rounded-3 mb-3 border-warning border-opacity-50">
+                <div class="card-body d-flex gap-2">
+                    <a href="/reservas/{{ reserva.pk }}/aprovar/" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Aprovar</a>
+                    <a href="/reservas/{{ reserva.pk }}/rejeitar/" class="btn btn-danger"><i class="bi bi-x-circle me-1"></i>Rejeitar</a>
+                    {% if request.user.pode_fazer_override %}<a href="/reservas/{{ reserva.pk }}/override/" class="btn btn-warning"><i class="bi bi-shield me-1"></i>Override</a>{% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3"><h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2"></i>Histórico</h6></div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                    {% for log in logs %}
+                    <li class="list-group-item px-3 py-2">
+                        <small class="fw-semibold d-block">{{ log.get_acao_display }}</small>
+                        <small class="text-muted">{{ log.criado_em|date:"d/m H:i" }} — {{ log.usuario.first_name|default:"Sistema" }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted small py-3 text-center">Sem histórico</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

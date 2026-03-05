@@ -1,8 +1,94 @@
 {% extends "base/base.html" %}
-{% block title %}Professor{% endblock %}
+{% block title %}Prof. {{ professor.usuario.nome_completo }}{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_public.css" rel="stylesheet">{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-    <h4>Agenda do Professor</h4>
-    <p class="text-muted">Em desenvolvimento.</p>
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Início</a></li>
+      <li class="breadcrumb-item active">{{ professor.usuario.nome_completo }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-body text-center py-4">
+          <div class="user-avatar mx-auto mb-3" style="width:72px;height:72px;font-size:1.8rem">
+            {{ professor.usuario.first_name|first|upper }}{{ professor.usuario.last_name|first|upper }}
+          </div>
+          <h4 class="fw-bold mb-1">{{ professor.usuario.nome_completo }}</h4>
+          <span class="badge bg-primary">{{ professor.get_titulacao_display }}</span>
+          {% if professor.area_atuacao %}
+          <p class="text-muted mt-2 mb-0 small">{{ professor.area_atuacao }}</p>
+          {% endif %}
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><i class="bi bi-card-text me-2 text-muted"></i><strong>SIAPE:</strong> {{ professor.siape }}</li>
+          {% if professor.usuario.email %}
+          <li class="list-group-item"><i class="bi bi-envelope me-2 text-muted"></i>{{ professor.usuario.email }}</li>
+          {% endif %}
+          {% if professor.lattes %}
+          <li class="list-group-item"><i class="bi bi-link me-2 text-muted"></i><a href="{{ professor.lattes }}" target="_blank">Currículo Lattes</a></li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <!-- Turmas ativas -->
+      {% if turmas_ativas %}
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-2">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Turmas {{ semana_inicio.year }}</h6>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for t in turmas_ativas %}
+          <li class="list-group-item px-3 py-2">
+            <div class="fw-medium small">{{ t.disciplina.nome }}</div>
+            <div class="text-muted" style="font-size:.75rem">{{ t.disciplina.codigo }} — Turma {{ t.codigo }} | {{ t.get_semestre_display }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-calendar-week text-primary me-2"></i>Agenda da Semana
+          </h5>
+          <span class="text-muted small">{{ semana_inicio|date:"d/m" }} a {{ semana_fim|date:"d/m/Y" }}</span>
+        </div>
+        <div class="card-body p-0">
+          {% if reservas_semana %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Dia</th><th>Horário</th><th>Disciplina</th><th>Sala</th></tr>
+              </thead>
+              <tbody>
+              {% for r in reservas_semana %}
+              <tr>
+                <td><strong>{{ r.data_inicio|date:"l" }}</strong><br><small class="text-muted">{{ r.data_inicio|date:"d/m" }}</small></td>
+                <td>{{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}</td>
+                <td>{% if r.turma %}{{ r.turma.disciplina.nome }}<br><small class="text-muted">Turma {{ r.turma.codigo }}</small>{% else %}{{ r.motivo }}{% endif %}</td>
+                <td><a href="{{ r.sala.get_absolute_url }}">{{ r.sala.nome }}</a><br><small class="text-muted">{{ r.sala.andar.predio.codigo }}</small></td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-calendar-x text-muted fs-2"></i>
+            <p class="text-muted mt-2">Nenhuma aula agendada esta semana.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

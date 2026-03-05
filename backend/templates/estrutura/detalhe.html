@@ -1,8 +1,140 @@
 {% extends "base/base.html" %}
-{% block title %}Sala{% endblock %}
+{% load static %}
+{% block title %}{{ sala.nome }} — Salas IGC{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_public.css" rel="stylesheet">{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-    <h4>Detalhes da Sala</h4>
-    <p class="text-muted">Em desenvolvimento.</p>
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Início</a></li>
+      <li class="breadcrumb-item"><a href="/salas/">Salas</a></li>
+      <li class="breadcrumb-item active">{{ sala.nome }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Info principal -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="result-icon {{ sala.tipo }} p-3 rounded-3" style="font-size:2rem">
+              {% if sala.is_laboratorio %}<i class="bi bi-flask"></i>
+              {% elif sala.tipo == 'auditorio' or sala.tipo == 'anfiteatro' %}<i class="bi bi-people"></i>
+              {% elif sala.tipo == 'sala_informatica' %}<i class="bi bi-pc-display"></i>
+              {% else %}<i class="bi bi-door-open"></i>{% endif %}
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0">{{ sala.nome }}</h4>
+              <span class="text-muted">{{ sala.codigo }}</span>
+            </div>
+          </div>
+          <span class="badge bg-primary mb-2">{{ sala.get_tipo_display }}</span>
+          <span class="badge status-{{ sala.status }} ms-1 mb-2">{{ sala.get_status_display }}</span>
+
+          <ul class="list-unstyled mt-3 mb-0">
+            <li class="mb-2"><i class="bi bi-building text-muted me-2"></i><strong>Prédio:</strong> {{ sala.andar.predio.nome }}</li>
+            <li class="mb-2"><i class="bi bi-layers text-muted me-2"></i><strong>Andar:</strong> {{ sala.andar }}</li>
+            <li class="mb-2"><i class="bi bi-people text-muted me-2"></i><strong>Capacidade:</strong> {{ sala.capacidade }} pessoas</li>
+            {% if sala.area_m2 %}<li class="mb-2"><i class="bi bi-arrows-fullscreen text-muted me-2"></i><strong>Área:</strong> {{ sala.area_m2 }} m²</li>{% endif %}
+          </ul>
+
+          <!-- Recursos -->
+          <hr>
+          <h6 class="fw-semibold mb-2">Recursos</h6>
+          <div class="d-flex flex-wrap gap-1">
+            {% if sala.tem_projetor %}<span class="badge bg-light text-dark border"><i class="bi bi-projector me-1"></i>Projetor</span>{% endif %}
+            {% if sala.tem_ar_condicionado %}<span class="badge bg-light text-dark border"><i class="bi bi-wind me-1"></i>A/C</span>{% endif %}
+            {% if sala.tem_lousa_digital %}<span class="badge bg-light text-dark border"><i class="bi bi-display me-1"></i>Lousa Digital</span>{% endif %}
+            {% if sala.tem_videoconferencia %}<span class="badge bg-light text-dark border"><i class="bi bi-camera-video me-1"></i>Videoconf.</span>{% endif %}
+            {% if sala.tem_acessibilidade %}<span class="badge bg-light text-dark border"><i class="bi bi-universal-access me-1"></i>Acessível</span>{% endif %}
+            {% if sala.tem_computadores %}<span class="badge bg-light text-dark border"><i class="bi bi-pc me-1"></i>{{ sala.qtd_computadores }} Computadores</span>{% endif %}
+          </div>
+
+          {% if user.is_authenticated and sala.status == 'disponivel' %}
+          <hr>
+          <a href="/reservas/nova/?sala={{ sala.pk }}" class="btn btn-primary w-100">
+            <i class="bi bi-calendar-plus me-2"></i>Solicitar Reserva
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Equipamentos -->
+      {% if equipamentos %}
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-2">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-tools me-2 text-primary"></i>Equipamentos ({{ equipamentos.count }})</h6>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for eq in equipamentos %}
+          <li class="list-group-item px-3 py-2">
+            <div class="fw-medium small">{{ eq.nome }}</div>
+            <div class="text-muted" style="font-size:.75rem">
+              Pat.: {{ eq.patrimonio }}{% if eq.modelo %} | {{ eq.modelo }}{% endif %}
+              <span class="badge bg-light text-dark ms-1">{{ eq.get_estado_conservacao_display }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Agenda semanal -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-calendar-week text-primary me-2"></i>
+            Agenda da Semana
+          </h5>
+          <span class="text-muted small">{{ semana_inicio|date:"d/m" }} a {{ semana_fim|date:"d/m/Y" }}</span>
+        </div>
+        <div class="card-body p-3">
+          {% if dias_agenda %}
+          <div class="row g-2">
+            {% for dia, reservas in dias_agenda.items %}
+            <div class="col-md-4 col-6">
+              <div class="agenda-day {% if dia == hoje %}border-primary border-2{% endif %}">
+                <div class="agenda-day-header {% if dia == hoje %}bg-primary{% else %}bg-secondary{% endif %}">
+                  {{ dia|date:"l" }}<br>
+                  <small>{{ dia|date:"d/m" }}</small>
+                </div>
+                {% if reservas %}
+                  {% for r in reservas %}
+                  <div class="agenda-slot">
+                    <div class="fw-semibold" style="font-size:.78rem; color:#1e40af">
+                      {{ r.hora_inicio|time:"H:i" }}–{{ r.hora_fim|time:"H:i" }}
+                    </div>
+                    <div class="text-truncate" style="font-size:.75rem">
+                      {% if r.turma %}{{ r.turma.disciplina.nome|truncatechars:25 }}
+                      {% else %}{{ r.motivo|truncatechars:25 }}{% endif %}
+                    </div>
+                    {% if r.turma.professor %}
+                    <div class="text-muted" style="font-size:.7rem">{{ r.turma.professor.usuario.first_name }}</div>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                {% else %}
+                <div class="agenda-slot-vazio">Livre</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-calendar-x text-muted fs-2"></i>
+            <p class="text-muted mt-2">Nenhuma reserva esta semana.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

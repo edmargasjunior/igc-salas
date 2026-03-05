@@ -1,5 +1,7 @@
+"""URLs de importação CSV."""
 from django.urls import path
-from django.views.generic import TemplateView
+from . import views
+
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='importacao/index.html'), name='importacao'),
+    path('', views.ImportacaoIndexView.as_view(), name='importacao_index'),
 ]

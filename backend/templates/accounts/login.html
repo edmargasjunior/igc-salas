@@ -1,168 +1,95 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entrar — IGC Salas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #1e40af; --primary-light: #3b82f6; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0ea5e9 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .login-card {
-            background: white;
-            border-radius: 1.25rem;
-            box-shadow: 0 25px 50px rgba(0,0,0,.35);
-            width: 100%;
-            max-width: 420px;
-            overflow: hidden;
-        }
-        .login-header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-        .brand-logo {
-            width: 60px; height: 60px;
-            background: rgba(255,255,255,.2);
-            border-radius: 1rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem;
-            margin: 0 auto 1rem;
-        }
-        .login-body { padding: 2rem; }
-        .form-control {
-            border: 1.5px solid #e2e8f0;
-            border-radius: .6rem;
-            padding: .65rem 1rem;
-            font-size: .9rem;
-            transition: border-color .15s;
-        }
-        .form-control:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
-        }
-        .input-group-text {
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
-            border-right: none;
-            border-radius: .6rem 0 0 .6rem;
-            color: #64748b;
-        }
-        .input-group .form-control { border-left: none; border-radius: 0 .6rem .6rem 0; }
-        .btn-login {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border: none; color: white;
-            font-weight: 600; font-size: .95rem;
-            padding: .75rem; border-radius: .75rem;
-            transition: transform .15s, opacity .15s;
-        }
-        .btn-login:hover { transform: translateY(-1px); opacity: .95; color: white; }
-        .toggle-pass { cursor: pointer; background: #f8fafc; border: 1.5px solid #e2e8f0;
-            border-left: none; border-radius: 0 .6rem .6rem 0; color: #64748b; }
-        .alert { border-radius: .6rem; font-size: .85rem; }
-    </style>
-</head>
-<body>
-<div class="login-card">
-    <div class="login-header">
-        <div class="brand-logo"><i class="bi bi-geo-alt-fill"></i></div>
-        <h4 class="fw-bold mb-1">IGC Salas</h4>
-        <p class="mb-0 opacity-75 small">Instituto de Geociências — UFMG</p>
-    </div>
+{% extends "base/base.html" %}
+{% block title %}Entrar — IGC Salas{% endblock %}
+{% block extra_css %}
+<style>
+.login-page { min-height: 100vh; display: flex; align-items: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0ea5e9 100%); }
+.login-card { max-width: 420px; width: 100%; border-radius: 1.25rem !important; box-shadow: 0 25px 60px rgba(0,0,0,0.35) !important; border: none !important; }
+.login-logo { width: 56px; height: 56px; background: linear-gradient(135deg, #1e40af, #0ea5e9); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.6rem; margin: 0 auto 1rem; }
+.form-control:focus { border-color: #1e40af; box-shadow: 0 0 0 0.2rem rgba(30,64,175,0.15); }
+</style>
+{% endblock %}
+{% block main_class %}login-page{% endblock %}
 
-    <div class="login-body">
-        <h5 class="fw-semibold mb-1">Acesso ao Sistema</h5>
-        <p class="text-muted small mb-4">Entre com suas credenciais institucionais</p>
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card login-card">
+        <div class="card-body p-4 p-md-5">
+          <!-- Logo -->
+          <div class="text-center mb-4">
+            <div class="login-logo"><i class="bi bi-geo-alt-fill"></i></div>
+            <h4 class="fw-bold mb-0">IGC Salas</h4>
+            <p class="text-muted small">Instituto de Geociências</p>
+          </div>
 
-        {% if messages %}
-        {% for msg in messages %}
-        <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} py-2">
-            <i class="bi bi-{% if msg.tags == 'error' %}x-circle{% elif msg.tags == 'success' %}check-circle{% else %}info-circle{% endif %} me-1"></i>
-            {{ msg }}
-        </div>
-        {% endfor %}
-        {% endif %}
+          <h5 class="fw-semibold mb-4 text-center">Acesse sua conta</h5>
 
-        <form method="post" novalidate>
+          <form method="post" action="/entrar/" novalidate>
             {% csrf_token %}
+            {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
 
             <div class="mb-3">
-                <label class="form-label fw-medium small">Usuário</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input
-                        type="text"
-                        name="username"
-                        class="form-control"
-                        placeholder="nome.sobrenome ou matrícula"
-                        value="{{ username|default:'' }}"
-                        required
-                        autocomplete="username"
-                    >
-                </div>
+              <label class="form-label fw-medium small">Usuário</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" name="username" class="form-control"
+                       value="{{ username|default:'' }}" placeholder="seu.usuario"
+                       autofocus autocomplete="username" required>
+              </div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-medium small d-flex justify-content-between">
-                    Senha
-                    <a href="/recuperar-senha/" class="text-primary text-decoration-none" style="font-size:.8rem">
-                        Esqueci minha senha
-                    </a>
-                </label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input
-                        type="password"
-                        name="password"
-                        id="passwordInput"
-                        class="form-control"
-                        placeholder="••••••••"
-                        required
-                        autocomplete="current-password"
-                    >
-                    <button class="toggle-pass btn" type="button" onclick="toggleSenha()">
-                        <i class="bi bi-eye" id="eyeIcon"></i>
-                    </button>
-                </div>
+              <label class="form-label fw-medium small">Senha</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" name="password" id="senhaInput"
+                       class="form-control" placeholder="••••••••"
+                       autocomplete="current-password" required>
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="toggleSenha()">
+                  <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+              </div>
             </div>
 
-            <button type="submit" class="btn btn-login w-100">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Entrar no Sistema
-            </button>
-        </form>
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+              </button>
+            </div>
 
-        <div class="text-center mt-4 pt-3 border-top">
-            <a href="/" class="text-muted small text-decoration-none">
-                <i class="bi bi-arrow-left me-1"></i>Voltar para busca pública
-            </a>
+            <div class="text-center">
+              <a href="/recuperar-senha/" class="text-muted small text-decoration-none">
+                <i class="bi bi-key me-1"></i>Esqueceu a senha?
+              </a>
+            </div>
+          </form>
         </div>
+        <div class="card-footer bg-light text-center py-3 rounded-bottom-3">
+          <small class="text-muted">
+            <i class="bi bi-shield-check text-success me-1"></i>
+            Conexão segura — IGC Salas
+          </small>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
 <script>
 function toggleSenha() {
-    const input = document.getElementById('passwordInput');
-    const icon = document.getElementById('eyeIcon');
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'bi bi-eye-slash';
-    } else {
-        input.type = 'password';
-        icon.className = 'bi bi-eye';
-    }
+  const input = document.getElementById('senhaInput');
+  const icon = document.getElementById('eyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
 }
 </script>
-</body>
-</html>
+{% endblock %}

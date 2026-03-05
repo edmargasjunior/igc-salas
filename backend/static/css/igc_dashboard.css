@@ -2,10 +2,7 @@
    IGC SALAS — CSS Dashboard
    ============================================================ */
 
-.dashboard-page {
-    background: #f1f5f9;
-    min-height: calc(100vh - var(--navbar-height));
-}
+.dashboard-page { background: #f1f5f9; }
 
 /* ===== METRIC CARDS ===== */
 .metric-card {
@@ -13,75 +10,93 @@
     align-items: center;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
-    border-radius: var(--igc-radius-lg);
-    border: 1px solid var(--igc-border);
-    background: white;
-    box-shadow: var(--igc-shadow);
+    border-radius: var(--igc-radius-lg) !important;
+    border: none !important;
+    color: white;
+    box-shadow: var(--igc-shadow-md) !important;
     transition: transform 0.2s, box-shadow 0.2s;
 }
+.metric-card:hover { transform: translateY(-3px); box-shadow: var(--igc-shadow-lg) !important; }
 
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--igc-shadow-md);
-}
+.metric-blue   { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+.metric-green  { background: linear-gradient(135deg, #065f46, #10b981); }
+.metric-purple { background: linear-gradient(135deg, #4c1d95, #8b5cf6); }
+.metric-orange { background: linear-gradient(135deg, #92400e, #f59e0b); }
+.metric-gray   { background: linear-gradient(135deg, #334155, #64748b); }
 
 .metric-icon {
-    width: 52px;
-    height: 52px;
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,0.2);
     border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 1.5rem;
-    color: white;
     flex-shrink: 0;
 }
-
-.metric-blue .metric-icon { background: linear-gradient(135deg, #1e40af, #3b82f6); }
-.metric-green .metric-icon { background: linear-gradient(135deg, #059669, #10b981); }
-.metric-purple .metric-icon { background: linear-gradient(135deg, #6d28d9, #8b5cf6); }
-.metric-orange .metric-icon { background: linear-gradient(135deg, #d97706, #f59e0b); }
-.metric-gray .metric-icon { background: linear-gradient(135deg, #475569, #94a3b8); }
-
 .metric-value {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 800;
     line-height: 1;
-    color: var(--igc-text);
 }
-
 .metric-label {
-    font-size: 0.78rem;
-    color: var(--igc-text-muted);
+    font-size: 0.8rem;
+    opacity: 0.85;
     font-weight: 500;
     margin-top: 0.2rem;
 }
 
-/* ===== SIDEBAR ACTIONS ===== */
-.action-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: var(--igc-radius);
-    transition: all 0.15s;
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--igc-text);
-    background: #f8fafc;
-    border: 1px solid var(--igc-border);
-    font-size: 0.875rem;
-}
+/* ===== CHARTS ===== */
+.chart-container { position: relative; height: 280px; }
+.chart-container-sm { position: relative; height: 220px; }
 
-.action-btn:hover {
-    background: var(--igc-primary);
-    color: white;
-    border-color: var(--igc-primary);
-    transform: translateX(4px);
-}
+/* ===== OCUPACAO ===== */
+.ocupacao-bar-wrap { padding: 0.75rem 1rem; border-bottom: 1px solid var(--igc-border); }
+.ocupacao-bar-wrap:last-child { border-bottom: none; }
+.ocupacao-bar-label { font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; }
+.ocupacao-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+.ocupacao-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1e40af, #3b82f6); transition: width 1s ease; }
 
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+/* ===== SIDEBAR WIDGETS ===== */
+.quick-stat {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem 0; border-bottom: 1px solid var(--igc-border);
+}
+.quick-stat:last-child { border-bottom: none; }
+.quick-stat-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 1rem; flex-shrink: 0;
+}
+.quick-stat-value { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+.quick-stat-label { font-size: 0.75rem; color: var(--igc-text-muted); }
+
+/* ===== TIMELINE ===== */
+.timeline { position: relative; padding-left: 1.5rem; }
+.timeline::before {
+    content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0;
+    width: 2px; background: var(--igc-border);
+}
+.timeline-item { position: relative; padding-bottom: 1.25rem; }
+.timeline-dot {
+    position: absolute; left: -1.5rem; top: 0.25rem;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--igc-primary); border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--igc-primary);
+}
+.timeline-dot.success { background: var(--igc-success); box-shadow: 0 0 0 2px var(--igc-success); }
+.timeline-dot.danger  { background: var(--igc-danger); box-shadow: 0 0 0 2px var(--igc-danger); }
+.timeline-dot.warning { background: var(--igc-warning); box-shadow: 0 0 0 2px var(--igc-warning); }
+.timeline-content { font-size: 0.85rem; }
+.timeline-time { font-size: 0.72rem; color: var(--igc-text-muted); }
+
+/* ===== TABELA STATUS COLORS ===== */
+tr:has(.status-pendente)   { border-left: 3px solid #f59e0b; }
+tr:has(.status-aprovada)   { border-left: 3px solid #10b981; }
+tr:has(.status-rejeitada)  { border-left: 3px solid #ef4444; }
+tr:has(.status-cancelada)  { border-left: 3px solid #94a3b8; }
+tr:has(.status-substituida){ border-left: 3px solid #8b5cf6; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .metric-value { font-size: 1.8rem; }
+    .metric-icon  { width: 44px; height: 44px; font-size: 1.2rem; }
+}

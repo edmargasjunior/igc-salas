@@ -1,200 +1,243 @@
 """
-Processador de CSV para importação de planejamento semestral.
-Formato esperado:
-sala_codigo,data,hora_inicio,hora_fim,disciplina_codigo,professor_siape,turma_codigo
-IGC-101,2025-03-03,08:00,09:40,GEO001,1234567,T01
+Processador de importação CSV para planejamento semestral.
+Valida, detecta conflitos e importa reservas em lote.
 """
 import csv
 import io
-from datetime import datetime
-from django.utils import timezone
-from django.db import transaction
 import logging
+from datetime import datetime, date, time
+from django.utils import timezone
 
 logger = logging.getLogger('apps.importacao')
 
+# Cabeçalhos esperados no CSV (case-insensitive)
+CABECALHOS_OBRIGATORIOS = [
+    'codigo_sala', 'data', 'hora_inicio', 'hora_fim', 'disciplina_codigo', 'turma_codigo'
+]
+CABECALHOS_OPCIONAIS = ['motivo', 'professor_siape', 'recorrente', 'dia_semana', 'data_fim']
 
-class CSVImportador:
-    """
-    Processa arquivo CSV de planejamento semestral.
-    Valida cada linha, detecta conflitos e cria reservas.
-    """
 
-    COLUNAS_OBRIGATORIAS = [
-        'sala_codigo', 'data', 'hora_inicio', 'hora_fim',
-        'disciplina_codigo', 'professor_siape', 'turma_codigo'
-    ]
+class ProcessadorCSV:
+    """Processa e valida arquivo CSV de planejamento semestral."""
 
-    def __init__(self, importacao, usuario):
-        self.importacao = importacao
+    def __init__(self, usuario):
         self.usuario = usuario
-        self.relatorio = []
-        self.erros = 0
-        self.sucessos = 0
-        self.conflitos = 0
+        self.erros = []
+        self.avisos = []
+        self.linhas_validas = []
+        self.conflitos = []
 
-    def processar(self, arquivo_csv, confirmar=False):
+    def processar(self, conteudo_arquivo):
         """
-        Processa o CSV em modo simulação ou confirmação.
-        confirmar=False: apenas valida e retorna relatório
-        confirmar=True: efetivamente cria as reservas
+        Lê, valida e verifica conflitos no CSV.
+        Retorna relatório sem salvar no banco.
         """
+        linhas = self._ler_csv(conteudo_arquivo)
+        if self.erros:
+            return self._relatorio()
+
+        for i, linha in enumerate(linhas, start=2):
+            resultado = self._validar_linha(i, linha)
+            if resultado:
+                conflito = self._verificar_conflito_linha(resultado)
+                if conflito:
+                    self.conflitos.append({
+                        'linha': i,
+                        'dados': resultado,
+                        'conflito_com': conflito
+                    })
+                else:
+                    self.linhas_validas.append({'linha': i, 'dados': resultado})
+
+        return self._relatorio()
+
+    def importar(self, conteudo_arquivo):
+        """Importa efetivamente as reservas válidas após validação."""
+        from apps.reservas.models import Reserva, LogReserva
         from apps.estrutura.models import Sala
-        from apps.academico.models import Disciplina, Professor, Turma
-        from apps.reservas.models import Reserva
+        from apps.academico.models import Disciplina, Turma
 
-        try:
-            conteudo = arquivo_csv.read().decode('utf-8-sig')
-        except UnicodeDecodeError:
-            conteudo = arquivo_csv.read().decode('latin-1')
+        self.processar(conteudo_arquivo)
+        importadas = 0
+        erros_importacao = []
 
-        reader = csv.DictReader(io.StringIO(conteudo))
-
-        # Verificar colunas
-        if not reader.fieldnames:
-            return {'erro': 'Arquivo CSV vazio ou inválido.'}
-
-        colunas_faltando = [c for c in self.COLUNAS_OBRIGATORIAS if c not in reader.fieldnames]
-        if colunas_faltando:
-            return {
-                'erro': f'Colunas obrigatórias ausentes: {", ".join(colunas_faltando)}',
-                'colunas_encontradas': list(reader.fieldnames),
-            }
-
-        linhas = list(reader)
-        self.importacao.total_linhas = len(linhas)
-        self.importacao.save(update_fields=['total_linhas'])
-
-        for num, linha in enumerate(linhas, start=2):
-            resultado = self._processar_linha(num, linha, confirmar)
-            self.relatorio.append(resultado)
-
-            if resultado['status'] == 'ok':
-                self.sucessos += 1
-            elif resultado['status'] == 'conflito':
-                self.conflitos += 1
-            else:
-                self.erros += 1
-
-        self.importacao.linhas_sucesso = self.sucessos
-        self.importacao.linhas_erro = self.erros
-        self.importacao.linhas_conflito = self.conflitos
-        self.importacao.relatorio = self.relatorio
-        self.importacao.status = 'concluido'
-        self.importacao.concluido_em = timezone.now()
-        self.importacao.save()
-
-        return {
-            'total': len(linhas),
-            'sucesso': self.sucessos,
-            'erros': self.erros,
-            'conflitos': self.conflitos,
-            'relatorio': self.relatorio[:100],
-        }
-
-    def _processar_linha(self, num, linha, confirmar):
-        from apps.estrutura.models import Sala
-        from apps.academico.models import Disciplina, Professor, Turma
-        from apps.reservas.models import Reserva
-        from datetime import date, time
-
-        resultado = {'linha': num, 'status': 'ok', 'mensagem': '', 'dados': {}}
-
-        try:
-            # Buscar sala
-            sala_codigo = linha.get('sala_codigo', '').strip()
+        for item in self.linhas_validas:
             try:
-                sala = Sala.objects.get(codigo=sala_codigo, ativo=True)
-            except Sala.DoesNotExist:
-                return {**resultado, 'status': 'erro', 'mensagem': f'Sala "{sala_codigo}" não encontrada.'}
+                dados = item['dados']
+                sala = Sala.objects.get(codigo=dados['codigo_sala'], ativo=True)
 
-            # Parsear data
-            data_str = linha.get('data', '').strip()
-            try:
-                data = datetime.strptime(data_str, '%Y-%m-%d').date()
-            except ValueError:
-                return {**resultado, 'status': 'erro', 'mensagem': f'Data inválida: "{data_str}" (use YYYY-MM-DD)'}
+                # Buscar turma
+                turma = None
+                try:
+                    disc = Disciplina.objects.get(codigo=dados['disciplina_codigo'])
+                    turma = Turma.objects.filter(
+                        disciplina=disc,
+                        codigo=dados['turma_codigo'],
+                        ativo=True
+                    ).order_by('-ano').first()
+                except (Disciplina.DoesNotExist, Turma.DoesNotExist):
+                    pass
 
-            # Parsear horários
-            def parse_time(s):
-                for fmt in ['%H:%M', '%H:%M:%S']:
-                    try:
-                        return datetime.strptime(s.strip(), fmt).time()
-                    except ValueError:
-                        continue
-                raise ValueError(f'Horário inválido: {s}')
-
-            try:
-                hora_inicio = parse_time(linha.get('hora_inicio', ''))
-                hora_fim = parse_time(linha.get('hora_fim', ''))
-            except ValueError as e:
-                return {**resultado, 'status': 'erro', 'mensagem': str(e)}
-
-            if hora_fim <= hora_inicio:
-                return {**resultado, 'status': 'erro', 'mensagem': 'Hora de fim deve ser após hora de início.'}
-
-            # Verificar conflito
-            from django.db.models import Q
-            conflito_qs = Reserva.objects.filter(
-                sala=sala,
-                data_inicio=data,
-                status__in=['aprovada', 'pendente']
-            ).filter(
-                Q(hora_inicio__lt=hora_fim) & Q(hora_fim__gt=hora_inicio)
-            )
-
-            if conflito_qs.exists():
-                c = conflito_qs.first()
-                return {**resultado,
-                    'status': 'conflito',
-                    'mensagem': f'Conflito com reserva #{c.pk} ({c.hora_inicio}-{c.hora_fim})',
-                    'dados': {'sala': sala_codigo, 'data': data_str}
-                }
-
-            # Buscar turma/disciplina
-            disc_codigo = linha.get('disciplina_codigo', '').strip()
-            siape = linha.get('professor_siape', '').strip()
-            turma_codigo = linha.get('turma_codigo', '').strip()
-
-            turma = None
-            try:
-                from apps.academico.models import Professor
-                prof = Professor.objects.get(siape=siape)
-                from apps.academico.models import Disciplina
-                disc = Disciplina.objects.get(codigo=disc_codigo)
-                turma, _ = Turma.objects.get_or_create(
-                    disciplina=disc,
-                    professor=prof,
-                    codigo=turma_codigo,
-                    ano=data.year,
-                    semestre='1' if data.month <= 6 else '2',
-                )
-            except Exception:
-                pass
-
-            resultado['dados'] = {
-                'sala': sala_codigo, 'data': data_str,
-                'hora_inicio': str(hora_inicio), 'hora_fim': str(hora_fim),
-                'disciplina': disc_codigo,
-            }
-
-            # Criar reserva se confirmar
-            if confirmar:
-                Reserva.objects.create(
+                reserva = Reserva.objects.create(
                     sala=sala,
                     solicitante=self.usuario,
                     turma=turma,
-                    tipo='pontual',
-                    data_inicio=data,
-                    hora_inicio=hora_inicio,
-                    hora_fim=hora_fim,
-                    motivo=f'Importado via CSV - {disc_codigo}',
-                    status='aprovada',
+                    tipo=Reserva.Tipo.RECORRENTE if dados.get('recorrente') == 'sim' else Reserva.Tipo.PONTUAL,
+                    data_inicio=dados['data_obj'],
+                    data_fim=dados.get('data_fim_obj'),
+                    hora_inicio=dados['hora_inicio_obj'],
+                    hora_fim=dados['hora_fim_obj'],
+                    motivo=dados.get('motivo', f"Importado via CSV — {dados['disciplina_codigo']}"),
+                    status=Reserva.Status.APROVADA,
                     aprovado_por=self.usuario,
+                    data_aprovacao=timezone.now(),
                 )
+                LogReserva.objects.create(
+                    reserva=reserva,
+                    usuario=self.usuario,
+                    acao=LogReserva.Acao.CRIADA,
+                    descricao=f"Importado via CSV (linha {item['linha']})"
+                )
+                importadas += 1
+            except Exception as e:
+                erros_importacao.append(f"Linha {item['linha']}: {str(e)}")
+                logger.error(f"Erro ao importar linha {item['linha']}: {e}")
 
-            return {**resultado, 'status': 'ok', 'mensagem': f'Linha {num} OK'}
+        return {
+            'importadas': importadas,
+            'erros_importacao': erros_importacao,
+            'conflitos_ignorados': len(self.conflitos),
+            'total_erros': len(self.erros),
+        }
 
+    def _ler_csv(self, conteudo):
+        """Lê e valida estrutura do CSV."""
+        try:
+            if isinstance(conteudo, bytes):
+                conteudo = conteudo.decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(conteudo))
+            cabecalhos = [h.strip().lower().replace(' ', '_') for h in (reader.fieldnames or [])]
+
+            faltando = [c for c in CABECALHOS_OBRIGATORIOS if c not in cabecalhos]
+            if faltando:
+                self.erros.append(f"Colunas obrigatórias ausentes: {', '.join(faltando)}")
+                return []
+
+            linhas = []
+            for row in reader:
+                linha_norm = {k.strip().lower().replace(' ', '_'): v.strip() for k, v in row.items()}
+                linhas.append(linha_norm)
+            return linhas
         except Exception as e:
-            logger.error(f"Erro processando linha {num}: {e}")
-            return {**resultado, 'status': 'erro', 'mensagem': f'Erro interno: {str(e)}'}
+            self.erros.append(f"Erro ao ler CSV: {str(e)}")
+            return []
+
+    def _validar_linha(self, num, linha):
+        """Valida e converte uma linha do CSV."""
+        erros_linha = []
+
+        # Sala
+        codigo_sala = linha.get('codigo_sala', '').strip()
+        if not codigo_sala:
+            erros_linha.append("codigo_sala vazio")
+
+        # Data
+        data_str = linha.get('data', '').strip()
+        data_obj = None
+        try:
+            data_obj = datetime.strptime(data_str, '%d/%m/%Y').date()
+        except ValueError:
+            try:
+                data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
+            except ValueError:
+                erros_linha.append(f"data inválida '{data_str}' (use dd/mm/aaaa)")
+
+        # Horários
+        hora_inicio_obj = self._parse_hora(linha.get('hora_inicio', ''))
+        hora_fim_obj = self._parse_hora(linha.get('hora_fim', ''))
+        if not hora_inicio_obj:
+            erros_linha.append(f"hora_inicio inválida '{linha.get('hora_inicio')}'")
+        if not hora_fim_obj:
+            erros_linha.append(f"hora_fim inválida '{linha.get('hora_fim')}'")
+        if hora_inicio_obj and hora_fim_obj and hora_fim_obj <= hora_inicio_obj:
+            erros_linha.append("hora_fim deve ser posterior à hora_inicio")
+
+        # Disciplina e Turma
+        if not linha.get('disciplina_codigo'):
+            erros_linha.append("disciplina_codigo vazio")
+        if not linha.get('turma_codigo'):
+            erros_linha.append("turma_codigo vazio")
+
+        if erros_linha:
+            self.erros.append({'linha': num, 'erros': erros_linha})
+            return None
+
+        # Data fim (recorrência)
+        data_fim_obj = None
+        if linha.get('data_fim'):
+            try:
+                data_fim_obj = datetime.strptime(linha['data_fim'], '%d/%m/%Y').date()
+            except ValueError:
+                try:
+                    data_fim_obj = datetime.strptime(linha['data_fim'], '%Y-%m-%d').date()
+                except ValueError:
+                    self.avisos.append(f"Linha {num}: data_fim inválida, ignorada")
+
+        return {
+            'codigo_sala': codigo_sala,
+            'data_obj': data_obj,
+            'hora_inicio_obj': hora_inicio_obj,
+            'hora_fim_obj': hora_fim_obj,
+            'data_fim_obj': data_fim_obj,
+            'disciplina_codigo': linha.get('disciplina_codigo', ''),
+            'turma_codigo': linha.get('turma_codigo', ''),
+            'motivo': linha.get('motivo', ''),
+            'recorrente': linha.get('recorrente', 'nao').lower(),
+            'raw': linha,
+        }
+
+    def _verificar_conflito_linha(self, dados):
+        """Verifica se já existe reserva aprovada no mesmo horário e sala."""
+        from apps.reservas.models import Reserva
+        from apps.estrutura.models import Sala
+        from django.db.models import Q
+
+        try:
+            sala = Sala.objects.get(codigo=dados['codigo_sala'], ativo=True)
+        except Sala.DoesNotExist:
+            self.erros.append({'linha': '?', 'erros': [f"Sala '{dados['codigo_sala']}' não encontrada"]})
+            return None
+
+        conflito = Reserva.objects.filter(
+            sala=sala,
+            data_inicio=dados['data_obj'],
+            status__in=[Reserva.Status.APROVADA, Reserva.Status.PENDENTE],
+        ).filter(
+            Q(hora_inicio__lt=dados['hora_fim_obj']) & Q(hora_fim__gt=dados['hora_inicio_obj'])
+        ).first()
+
+        if conflito:
+            return f"Reserva #{conflito.pk} ({conflito.hora_inicio}–{conflito.hora_fim})"
+        return None
+
+    def _parse_hora(self, valor):
+        """Converte string de hora para objeto time."""
+        if not valor:
+            return None
+        for fmt in ['%H:%M', '%H:%M:%S']:
+            try:
+                return datetime.strptime(valor.strip(), fmt).time()
+            except ValueError:
+                continue
+        return None
+
+    def _relatorio(self):
+        return {
+            'total_linhas': len(self.linhas_validas) + len(self.conflitos) + len(self.erros),
+            'validas': len(self.linhas_validas),
+            'conflitos': len(self.conflitos),
+            'erros': len(self.erros),
+            'detalhes_erros': self.erros,
+            'detalhes_conflitos': self.conflitos,
+            'avisos': self.avisos,
+        }

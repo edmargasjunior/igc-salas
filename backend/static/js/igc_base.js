@@ -1,67 +1,69 @@
-/**
- * IGC SALAS — JavaScript Base
- * Scripts globais compartilhados em todos os templates
- */
+/* ============================================================
+   IGC SALAS — JavaScript Base
+   Navbar scroll, toasts, notificações
+   ============================================================ */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // ===== NAVBAR SCROLL EFFECT =====
+    // ===== Navbar scroll shadow =====
     const navbar = document.getElementById('mainNav');
     if (navbar) {
         window.addEventListener('scroll', () => {
-            navbar.classList.toggle('scrolled', window.scrollY > 10);
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
         });
     }
 
-    // ===== AUTO-DISMISS TOASTS =====
+    // ===== Auto-fechar toasts =====
     document.querySelectorAll('.toast').forEach(el => {
         setTimeout(() => {
-            const toast = bootstrap.Toast.getInstance(el);
-            if (toast) toast.hide();
-            else el.classList.remove('show');
+            const toast = bootstrap.Toast.getOrCreateInstance(el);
+            toast.hide();
         }, 5000);
     });
 
-    // ===== CONFIRMAÇÕES DE AÇÕES DESTRUTIVAS =====
-    document.querySelectorAll('[data-confirm]').forEach(el => {
-        el.addEventListener('click', (e) => {
-            const msg = el.dataset.confirm || 'Confirmar esta ação?';
-            if (!confirm(msg)) e.preventDefault();
+    // ===== Carregar notificações no dropdown =====
+    const notifList = document.getElementById('notif-list');
+    if (notifList) {
+        document.querySelector('[data-bs-toggle="dropdown"]')?.addEventListener('show.bs.dropdown', function (e) {
+            if (!e.target.closest('.dropdown')?.querySelector('#notif-list')) return;
+            fetch('/api/v1/notificacoes/recentes/')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.resultados || data.resultados.length === 0) {
+                        notifList.innerHTML = '<span class="text-muted small">Nenhuma notificação nova.</span>';
+                        return;
+                    }
+                    notifList.innerHTML = data.resultados.map(n => `
+                        <a href="/notificacoes/" class="d-flex gap-2 text-decoration-none text-dark px-1 py-1">
+                            <div style="font-size:1.1rem">${n.icone || '🔔'}</div>
+                            <div>
+                                <div class="fw-medium" style="font-size:.82rem">${n.titulo}</div>
+                                <div class="text-muted" style="font-size:.72rem">${n.tempo}</div>
+                            </div>
+                        </a>
+                    `).join('<hr class="my-1">');
+                })
+                .catch(() => {
+                    notifList.innerHTML = '<span class="text-muted small">Erro ao carregar.</span>';
+                });
+        });
+    }
+
+    // ===== Confirmação em botões de exclusão/ação destrutiva =====
+    document.querySelectorAll('[data-confirm]').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            if (!confirm(this.dataset.confirm)) {
+                e.preventDefault();
+            }
         });
     });
 
-    // ===== CARREGAR NOTIFICAÇÕES NO DROPDOWN =====
-    const notifList = document.getElementById('notif-list');
-    if (notifList) {
-        document.querySelector('[data-bs-toggle="dropdown"] .bi-bell')
-            ?.closest('button')
-            ?.addEventListener('click', carregarNotificacoes);
-    }
-});
-
-async function carregarNotificacoes() {
-    const list = document.getElementById('notif-list');
-    if (!list || list.dataset.loaded) return;
-
-    try {
-        const resp = await fetch('/api/v1/notificacoes/?page_size=5', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    // ===== Highlight da linha da tabela ao clicar =====
+    document.querySelectorAll('table.table-hover tbody tr[data-href]').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+            window.location.href = row.dataset.href;
         });
-        if (!resp.ok) throw new Error();
-        const data = await resp.json();
-        const notifs = data.results || [];
+    });
 
-        if (notifs.length === 0) {
-            list.innerHTML = '<span>Nenhuma notificação não lida.</span>';
-        } else {
-            list.innerHTML = notifs.map(n => `
-                <a href="#" class="dropdown-item py-2 px-3 border-bottom" style="white-space:normal">
-                    <div class="fw-semibold small">${n.titulo}</div>
-                    <div class="text-muted" style="font-size:.75rem">${n.mensagem.substring(0,80)}...</div>
-                </a>`).join('');
-        }
-        list.dataset.loaded = '1';
-    } catch {
-        list.innerHTML = '<span>Erro ao carregar notificações.</span>';
-    }
-}
+});

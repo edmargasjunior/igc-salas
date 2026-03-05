@@ -1,7 +1,8 @@
+"""URLs públicas de estrutura: /salas/"""
 from django.urls import path
-from django.views.generic import TemplateView
+from . import views
 
-# URL pública: /salas/<slug>/
 urlpatterns = [
-    path('<slug:slug>/', TemplateView.as_view(template_name='estrutura/detalhe.html'), name='sala_detalhe'),
+    path('', views.SalaListaPublicaView.as_view(), name='salas_lista'),
+    path('<slug:slug>/', views.SalaDetalhePublicaView.as_view(), name='sala_detalhe'),
 ]

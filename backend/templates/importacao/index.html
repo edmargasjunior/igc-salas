@@ -1,39 +1,237 @@
 {% extends "base/base.html" %}
-{% block title %}Importação CSV{% endblock %}
+{% block title %}Importação de Planejamento CSV{% endblock %}
 {% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
 {% block main_class %}dashboard-page{% endblock %}
+
 {% block content %}
-<div class="container py-4" style="max-width:700px">
-    <h4 class="fw-bold mb-4"><i class="bi bi-upload text-primary me-2"></i>Importar Planejamento Semestral</h4>
-    <div class="card shadow-sm border-0 rounded-3 mb-3">
-        <div class="card-header py-3"><h6 class="mb-0 fw-semibold"><i class="bi bi-info-circle me-2"></i>Formato Esperado do CSV</h6></div>
+<div class="container-fluid px-4 py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-bold mb-1"><i class="bi bi-upload text-primary me-2"></i>Importação de Planejamento</h4>
+      <p class="text-muted mb-0">Importe o planejamento semestral via arquivo CSV.</p>
+    </div>
+    <a href="/static/docs/modelo_importacao.csv" class="btn btn-outline-secondary btn-sm" download>
+      <i class="bi bi-download me-1"></i>Baixar Modelo CSV
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-7">
+
+      <!-- Formulário de Upload -->
+      {% if not relatorio %}
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-header py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-file-earmark-spreadsheet me-2 text-primary"></i>Upload do Arquivo</h6>
+        </div>
         <div class="card-body">
-            <p class="text-muted small mb-2">O arquivo CSV deve conter as seguintes colunas:</p>
-            <code class="d-block bg-light p-2 rounded small">sala_codigo,data,hora_inicio,hora_fim,disciplina_codigo,professor_siape,turma_codigo</code>
-            <p class="text-muted small mt-2 mb-0">Exemplo: <code>IGC-101,2025-03-03,08:00,09:40,GEO001,1234567,T01</code></p>
+          <form method="post" enctype="multipart/form-data" id="formImportacao">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="validar" id="acaoInput">
+
+            <div class="upload-area mb-3" id="uploadArea">
+              <i class="bi bi-cloud-upload fs-2 text-muted"></i>
+              <p class="mb-1 fw-medium">Arraste o arquivo CSV aqui</p>
+              <p class="text-muted small mb-3">ou clique para selecionar</p>
+              <input type="file" name="arquivo_csv" id="arquivoInput" accept=".csv" class="d-none" required>
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('arquivoInput').click()">
+                <i class="bi bi-folder2-open me-1"></i>Selecionar Arquivo
+              </button>
+              <div class="mt-2 text-success small d-none" id="nomeArquivo"></div>
+            </div>
+
+            <div class="alert alert-info small mb-3">
+              <i class="bi bi-info-circle me-1"></i>
+              <strong>Formato esperado:</strong> CSV com colunas obrigatórias:
+              <code>codigo_sala, data, hora_inicio, hora_fim, disciplina_codigo, turma_codigo</code>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-2"></i>Validar Arquivo
+              </button>
+            </div>
+          </form>
         </div>
-    </div>
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body p-4">
-            <form method="post" enctype="multipart/form-data" action="/api/v1/importacao/csv/">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Arquivo CSV</label>
-                    <input type="file" name="arquivo" class="form-control" accept=".csv" required>
-                </div>
-                <div class="mb-4">
-                    <div class="form-check">
-                        <input type="checkbox" name="confirmar" id="confirmarCheck" class="form-check-input">
-                        <label for="confirmarCheck" class="form-check-label">
-                            Confirmar importação (sem marcar, apenas simula e mostra relatório)
-                        </label>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-upload me-2"></i>Processar CSV
-                </button>
-            </form>
+      </div>
+
+      <!-- Relatório de validação -->
+      {% else %}
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-clipboard-check me-2 text-primary"></i>Relatório de Validação</h6>
+          <span class="text-muted small">{{ nome_arquivo }}</span>
         </div>
+        <div class="card-body">
+          <!-- Resumo -->
+          <div class="row g-2 mb-3">
+            <div class="col-3">
+              <div class="text-center p-3 rounded-3 bg-light">
+                <div class="fs-4 fw-bold text-dark">{{ relatorio.total_linhas }}</div>
+                <div class="small text-muted">Total</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center p-3 rounded-3 bg-success bg-opacity-10">
+                <div class="fs-4 fw-bold text-success">{{ relatorio.validas }}</div>
+                <div class="small text-muted">Válidas</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center p-3 rounded-3 bg-warning bg-opacity-10">
+                <div class="fs-4 fw-bold text-warning">{{ relatorio.conflitos }}</div>
+                <div class="small text-muted">Conflitos</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center p-3 rounded-3 bg-danger bg-opacity-10">
+                <div class="fs-4 fw-bold text-danger">{{ relatorio.erros }}</div>
+                <div class="small text-muted">Erros</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Erros detalhados -->
+          {% if relatorio.detalhes_erros %}
+          <div class="alert alert-danger small">
+            <strong><i class="bi bi-x-circle me-1"></i>Erros encontrados:</strong>
+            <ul class="mb-0 mt-1">
+              {% for e in relatorio.detalhes_erros %}
+              <li>
+                {% if e.linha %}Linha {{ e.linha }}: {% endif %}
+                {% if e.erros %}{{ e.erros|join:", " }}{% else %}{{ e }}{% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Conflitos -->
+          {% if relatorio.detalhes_conflitos %}
+          <div class="alert alert-warning small">
+            <strong><i class="bi bi-exclamation-triangle me-1"></i>Conflitos (serão ignorados na importação):</strong>
+            <ul class="mb-0 mt-1">
+              {% for c in relatorio.detalhes_conflitos %}
+              <li>Linha {{ c.linha }} — Sala {{ c.dados.codigo_sala }} em {{ c.dados.data_obj }}
+                {{ c.dados.hora_inicio_obj }} conflita com {{ c.conflito_com }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Ações -->
+          {% if relatorio.validas > 0 %}
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="confirmar">
+            <input type="hidden" name="arquivo_csv_nome" value="{{ nome_arquivo }}">
+            <textarea name="conteudo_csv" class="d-none">{{ conteudo_b64 }}</textarea>
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-success flex-grow-1">
+                <i class="bi bi-check-circle me-2"></i>
+                Confirmar Importação de {{ relatorio.validas }} Reservas
+              </button>
+              <a href="/importacao/" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </form>
+          {% else %}
+          <a href="/importacao/" class="btn btn-outline-secondary mt-2">
+            <i class="bi bi-arrow-left me-1"></i>Voltar e Corrigir
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
+
+    <div class="col-xl-5">
+      <!-- Formato esperado -->
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-header py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-table me-2 text-primary"></i>Formato do CSV</h6>
+        </div>
+        <div class="card-body">
+          <p class="small text-muted mb-2">Colunas <strong>obrigatórias</strong>:</p>
+          <table class="table table-sm table-bordered small mb-3">
+            <thead class="table-light"><tr><th>Coluna</th><th>Exemplo</th></tr></thead>
+            <tbody>
+              <tr><td><code>codigo_sala</code></td><td>LAB-GEO-01</td></tr>
+              <tr><td><code>data</code></td><td>14/03/2025</td></tr>
+              <tr><td><code>hora_inicio</code></td><td>08:00</td></tr>
+              <tr><td><code>hora_fim</code></td><td>09:40</td></tr>
+              <tr><td><code>disciplina_codigo</code></td><td>IGC001</td></tr>
+              <tr><td><code>turma_codigo</code></td><td>T1</td></tr>
+            </tbody>
+          </table>
+          <p class="small text-muted mb-2">Colunas <strong>opcionais</strong>:</p>
+          <table class="table table-sm table-bordered small">
+            <thead class="table-light"><tr><th>Coluna</th><th>Exemplo</th></tr></thead>
+            <tbody>
+              <tr><td><code>motivo</code></td><td>Aula regular</td></tr>
+              <tr><td><code>recorrente</code></td><td>sim / nao</td></tr>
+              <tr><td><code>data_fim</code></td><td>30/06/2025</td></tr>
+              <tr><td><code>professor_siape</code></td><td>1234567</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Histórico de importações -->
+      {% if historico %}
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-primary"></i>Importações Recentes</h6>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for imp in historico %}
+          <li class="list-group-item px-3 py-2">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-medium small">{{ imp.nome_arquivo }}</div>
+                <div class="text-muted" style="font-size:.75rem">{{ imp.criado_em|date:"d/m/Y H:i" }}</div>
+              </div>
+              <div class="text-end">
+                <span class="badge bg-success">{{ imp.linhas_sucesso }} ok</span>
+                {% if imp.linhas_erro > 0 %}<span class="badge bg-danger ms-1">{{ imp.linhas_erro }} err</span>{% endif %}
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const input = document.getElementById('arquivoInput');
+const nomeEl = document.getElementById('nomeArquivo');
+if (input) {
+  input.addEventListener('change', function() {
+    if (this.files[0]) {
+      nomeEl.textContent = '✓ ' + this.files[0].name;
+      nomeEl.classList.remove('d-none');
+    }
+  });
+}
+// Drag and drop
+const area = document.getElementById('uploadArea');
+if (area) {
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('border-primary'); });
+  area.addEventListener('dragleave', () => area.classList.remove('border-primary'));
+  area.addEventListener('drop', e => {
+    e.preventDefault();
+    area.classList.remove('border-primary');
+    if (e.dataTransfer.files[0]) {
+      input.files = e.dataTransfer.files;
+      nomeEl.textContent = '✓ ' + e.dataTransfer.files[0].name;
+      nomeEl.classList.remove('d-none');
+    }
+  });
+}
+</script>
 {% endblock %}

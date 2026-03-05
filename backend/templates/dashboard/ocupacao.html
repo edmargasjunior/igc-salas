@@ -1,0 +1,118 @@
+{% extends "base/base.html" %}
+{% block title %}Ocupação de Salas — Dashboard{% endblock %}
+{% block extra_css %}
+<link href="/static/css/igc_dashboard.css" rel="stylesheet">
+{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-bar-chart-line text-primary me-2"></i>Relatório de Ocupação</h4>
+            <p class="text-muted mb-0">Período: {{ periodo }}</p>
+        </div>
+        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar ao Dashboard
+        </a>
+    </div>
+
+    <!-- Gráfico principal de ocupação -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3">
+                    <h6 class="fw-semibold mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Reservas por Sala (últimos 30 dias)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="chartOcupacao"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3">
+                    <h6 class="fw-semibold mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Reservas por Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-sm">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendência -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header py-3">
+                    <h6 class="fw-semibold mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>Tendência de Reservas (últimas 2 semanas)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="chartTendencia"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela detalhada de ocupação -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-3">
+            <h6 class="fw-semibold mb-0"><i class="bi bi-table me-2 text-primary"></i>Detalhamento por Sala</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sala</th>
+                            <th>Tipo</th>
+                            <th>Prédio</th>
+                            <th>Capacidade</th>
+                            <th>Reservas (30d)</th>
+                            <th>Taxa de Ocupação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for sala in ocupacao_salas %}
+                    <tr>
+                        <td>
+                            <a href="{{ sala.get_absolute_url }}" class="fw-medium text-decoration-none">{{ sala.nome }}</a>
+                            <small class="text-muted d-block">{{ sala.codigo }}</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ sala.get_tipo_display }}</span></td>
+                        <td>{{ sala.andar.predio.nome }}</td>
+                        <td>{{ sala.capacidade }} pess.</td>
+                        <td>
+                            <span class="fw-semibold">{{ sala.total_reservas }}</span>
+                        </td>
+                        <td>
+                            {% with pct=sala.total_reservas|default:0 %}
+                            <div class="ocupacao-bar" style="min-width:100px">
+                                <div class="ocupacao-bar-fill"
+                                     style="width:{% widthratio sala.total_reservas 60 100 %}%"></div>
+                            </div>
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Nenhum dado disponível.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/static/js/igc_dashboard.js"></script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base/base.html" %}
+{% block title %}Professores{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-person-badge text-primary me-2"></i>Professores</h4>
+            <p class="text-muted mb-0">Corpo docente do Instituto de Geociências</p>
+        </div>
+        {% if request.user.is_responsavel %}
+        <a href="/academico/professores/novo/" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Novo Professor
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtro -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Nome ou SIAPE..." value="{{ q }}">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Buscar</button>
+                </div>
+                {% if q %}<div class="col-auto"><a href="/academico/professores/" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a></div>{% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Grid de professores -->
+    <div class="row g-3">
+        {% for prof in professores %}
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-3 d-flex gap-3">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0">
+                        {% if prof.usuario.foto %}
+                        <img src="{{ prof.usuario.foto.url }}" class="rounded-circle" width="52" height="52" style="object-fit:cover" alt="">
+                        {% else %}
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:52px;height:52px">
+                            <i class="bi bi-person text-primary fs-4"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <!-- Info -->
+                    <div class="flex-grow-1 min-w-0">
+                        <a href="/professor/{{ prof.slug }}/" class="fw-bold text-dark text-decoration-none d-block text-truncate">{{ prof.nome }}</a>
+                        <span class="badge bg-secondary-subtle text-secondary small mb-1">{{ prof.get_titulacao_display }}</span>
+                        {% if prof.area_atuacao %}
+                        <p class="text-muted small mb-1 text-truncate">{{ prof.area_atuacao }}</p>
+                        {% endif %}
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-primary-subtle text-primary"><i class="bi bi-people me-1"></i>{{ prof.total_turmas }} turma(s)</span>
+                            {% if prof.siape %}<code class="text-muted small">{{ prof.siape }}</code>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Ações -->
+                    {% if request.user.is_responsavel %}
+                    <div class="flex-shrink-0">
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><a class="dropdown-item" href="/professor/{{ prof.slug }}/"><i class="bi bi-eye me-2"></i>Ver página</a></li>
+                                <li><a class="dropdown-item" href="/academico/professores/{{ prof.pk }}/editar/"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="/academico/professores/{{ prof.pk }}/excluir/"><i class="bi bi-trash me-2"></i>Remover</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-person-badge text-muted" style="font-size:4rem;opacity:.3"></i>
+            <h5 class="mt-3 text-muted">Nenhum professor encontrado</h5>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+[
+  {
+    "model": "estrutura.predio",
+    "pk": 1,
+    "fields": {
+      "nome": "Prédio Principal IGC",
+      "codigo": "IGC-A",
+      "descricao": "Prédio principal do Instituto de Geociências",
+      "endereco": "Av. Antônio Carlos, 6627 - Pampulha, Belo Horizonte - MG",
+      "slug": "predio-principal-igc",
+      "ativo": true,
+      "criado_em": "2025-01-01T08:00:00Z",
+      "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.predio",
+    "pk": 2,
+    "fields": {
+      "nome": "Laboratórios de Pesquisa",
+      "codigo": "IGC-B",
+      "descricao": "Bloco de laboratórios de pesquisa geológica",
+      "endereco": "Av. Antônio Carlos, 6627 - Pampulha, BH-MG",
+      "slug": "laboratorios-de-pesquisa",
+      "ativo": true,
+      "criado_em": "2025-01-01T08:00:00Z",
+      "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.andar",
+    "pk": 1,
+    "fields": { "predio": 1, "numero": 0, "nome": "Térreo", "descricao": "", "ativo": true }
+  },
+  {
+    "model": "estrutura.andar",
+    "pk": 2,
+    "fields": { "predio": 1, "numero": 1, "nome": "1º Andar", "descricao": "", "ativo": true }
+  },
+  {
+    "model": "estrutura.andar",
+    "pk": 3,
+    "fields": { "predio": 1, "numero": 2, "nome": "2º Andar", "descricao": "", "ativo": true }
+  },
+  {
+    "model": "estrutura.andar",
+    "pk": 4,
+    "fields": { "predio": 2, "numero": 0, "nome": "Térreo", "descricao": "", "ativo": true }
+  },
+  {
+    "model": "estrutura.andar",
+    "pk": 5,
+    "fields": { "predio": 2, "numero": 1, "nome": "1º Andar", "descricao": "", "ativo": true }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 1,
+    "fields": {
+      "codigo": "AUD-01", "nome": "Auditório Principal", "tipo": "auditorio",
+      "andar": 1, "capacidade": 200, "area_m2": "180.00",
+      "status": "disponivel", "descricao": "Auditório principal do IGC para eventos e seminários",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": true, "tem_acessibilidade": true, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "auditorio-principal", "ativo": true,
+      "observacoes": "Capacidade total 200 lugares", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 2,
+    "fields": {
+      "codigo": "SALA-101", "nome": "Sala de Aula 101", "tipo": "sala_aula",
+      "andar": 2, "capacidade": 50, "area_m2": "60.00",
+      "status": "disponivel", "descricao": "Sala de aula padrão 1º andar",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": false, "tem_acessibilidade": true, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "sala-de-aula-101", "ativo": true,
+      "observacoes": "", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 3,
+    "fields": {
+      "codigo": "SALA-102", "nome": "Sala de Aula 102", "tipo": "sala_aula",
+      "andar": 2, "capacidade": 45, "area_m2": "55.00",
+      "status": "disponivel", "descricao": "",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": false, "tem_acessibilidade": false, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "sala-de-aula-102", "ativo": true,
+      "observacoes": "", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 4,
+    "fields": {
+      "codigo": "SALA-201", "nome": "Sala de Aula 201", "tipo": "sala_aula",
+      "andar": 3, "capacidade": 40, "area_m2": "50.00",
+      "status": "disponivel", "descricao": "",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": true,
+      "tem_videoconferencia": false, "tem_acessibilidade": false, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "sala-de-aula-201", "ativo": true,
+      "observacoes": "", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 5,
+    "fields": {
+      "codigo": "LAB-GEO-01", "nome": "Laboratório de Geologia Estrutural", "tipo": "laboratorio",
+      "andar": 4, "capacidade": 30, "area_m2": "80.00",
+      "status": "disponivel", "descricao": "Laboratório equipado para análise de amostras geológicas",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": false, "tem_acessibilidade": false, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "laboratorio-de-geologia-estrutural", "ativo": true,
+      "observacoes": "", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 6,
+    "fields": {
+      "codigo": "LAB-INFO-01", "nome": "Laboratório de Informática", "tipo": "sala_informatica",
+      "andar": 5, "capacidade": 30, "area_m2": "70.00",
+      "status": "disponivel", "descricao": "Laboratório de informática com 30 workstations",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": false, "tem_acessibilidade": true, "tem_computadores": true,
+      "qtd_computadores": 30, "slug": "laboratorio-de-informatica", "ativo": true,
+      "observacoes": "Computadores com Linux Ubuntu 22.04 e software GIS",
+      "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 7,
+    "fields": {
+      "codigo": "LAB-PETRO-01", "nome": "Laboratório de Petrografia", "tipo": "laboratorio",
+      "andar": 4, "capacidade": 20, "area_m2": "60.00",
+      "status": "disponivel", "descricao": "Laboratório com microscópios petrográficos",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": false, "tem_acessibilidade": false, "tem_computadores": true,
+      "qtd_computadores": 10, "slug": "laboratorio-de-petrografia", "ativo": true,
+      "observacoes": "10 microscópios Olympus BX53P disponíveis",
+      "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.sala",
+    "pk": 8,
+    "fields": {
+      "codigo": "SALA-CONF-01", "nome": "Sala de Conferências", "tipo": "sala_reuniao",
+      "andar": 3, "capacidade": 20, "area_m2": "40.00",
+      "status": "disponivel", "descricao": "Sala de reuniões e defesas",
+      "tem_projetor": true, "tem_ar_condicionado": true, "tem_lousa_digital": false,
+      "tem_videoconferencia": true, "tem_acessibilidade": false, "tem_computadores": false,
+      "qtd_computadores": 0, "slug": "sala-de-conferencias", "ativo": true,
+      "observacoes": "", "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.equipamento",
+    "pk": 1,
+    "fields": {
+      "nome": "Projetor Epson PowerLite", "patrimonio": "IGC-00001",
+      "modelo": "PowerLite X49", "fabricante": "Epson", "numero_serie": "EPSX49001",
+      "quantidade": 1, "sala": 1, "estado_conservacao": "bom",
+      "data_aquisicao": "2023-01-15", "data_garantia": "2026-01-15",
+      "valor_aquisicao": "3500.00", "observacoes": "", "ativo": true,
+      "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "estrutura.equipamento",
+    "pk": 2,
+    "fields": {
+      "nome": "Microscópio Petrográfico Olympus", "patrimonio": "IGC-00050",
+      "modelo": "BX53P", "fabricante": "Olympus", "numero_serie": "OLMICRO050",
+      "quantidade": 10, "sala": 7, "estado_conservacao": "otimo",
+      "data_aquisicao": "2022-06-10", "data_garantia": "2025-06-10",
+      "valor_aquisicao": "45000.00", "observacoes": "Incluem câmera digital 18MP", "ativo": true,
+      "criado_em": "2025-01-01T08:00:00Z", "atualizado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "academico.disciplina",
+    "pk": 1,
+    "fields": {
+      "codigo": "IGC001", "nome": "Geologia Estrutural", "ementa": "Estruturas geológicas primárias e secundárias.",
+      "carga_horaria": 60, "creditos": 4, "modalidade": "presencial",
+      "departamento": "Geologia", "slug": "igc001-geologia-estrutural",
+      "ativo": true, "criado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "academico.disciplina",
+    "pk": 2,
+    "fields": {
+      "codigo": "IGC002", "nome": "Petrologia Ígnea", "ementa": "Petrogênese de rochas ígneas.",
+      "carga_horaria": 60, "creditos": 4, "modalidade": "presencial",
+      "departamento": "Geologia", "slug": "igc002-petrologia-ignea",
+      "ativo": true, "criado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "academico.disciplina",
+    "pk": 3,
+    "fields": {
+      "codigo": "IGC003", "nome": "Geofísica Aplicada", "ementa": "Métodos geofísicos de exploração.",
+      "carga_horaria": 60, "creditos": 4, "modalidade": "presencial",
+      "departamento": "Geofísica", "slug": "igc003-geofisica-aplicada",
+      "ativo": true, "criado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "academico.disciplina",
+    "pk": 4,
+    "fields": {
+      "codigo": "IGC004", "nome": "Cartografia e SIG", "ementa": "Princípios de cartografia e Sistemas de Informação Geográfica.",
+      "carga_horaria": 60, "creditos": 4, "modalidade": "presencial",
+      "departamento": "Cartografia", "slug": "igc004-cartografia-sig",
+      "ativo": true, "criado_em": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "academico.disciplina",
+    "pk": 5,
+    "fields": {
+      "codigo": "IGC005", "nome": "Sedimentologia", "ementa": "Processos sedimentares e ambientes deposicionais.",
+      "carga_horaria": 60, "creditos": 4, "modalidade": "presencial",
+      "departamento": "Geologia", "slug": "igc005-sedimentologia",
+      "ativo": true, "criado_em": "2025-01-01T08:00:00Z"
+    }
+  }
+]

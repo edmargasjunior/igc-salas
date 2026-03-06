@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+{% block title %}Prédios{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-building text-primary me-2"></i>Gestão de Prédios</h4>
+            <p class="text-muted mb-0">Estrutura física — Prédios e Andares</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/estrutura/salas/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-door-open me-1"></i>Salas</a>
+            <a href="/estrutura/predios/novo/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Novo Prédio</a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for predio in predios %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                                <i class="bi bi-building text-primary" style="font-size:1.5rem"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0">{{ predio.nome }}</h5>
+                                <code class="text-muted small">{{ predio.codigo }}</code>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill fs-6">
+                            {{ predio.total_salas }} sala(s)
+                        </span>
+                    </div>
+                    {% if predio.descricao %}
+                    <p class="text-muted small mb-3">{{ predio.descricao|truncatechars:80 }}</p>
+                    {% endif %}
+                    {% if predio.endereco %}
+                    <p class="text-muted small mb-3"><i class="bi bi-geo-alt me-1"></i>{{ predio.endereco }}</p>
+                    {% endif %}
+
+                    <!-- Andares -->
+                    <div class="mb-3">
+                        {% for andar in predio.andares.all %}
+                        <span class="badge bg-light text-dark border me-1 mb-1">{{ andar.nome_display }}</span>
+                        {% empty %}
+                        <span class="text-muted small">Nenhum andar cadastrado</span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="/estrutura/predios/{{ predio.pk }}/editar/" class="btn btn-outline-secondary btn-sm flex-fill">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </a>
+                        <a href="/salas/?predio={{ predio.pk }}" class="btn btn-primary btn-sm flex-fill">
+                            <i class="bi bi-door-open me-1"></i>Ver Salas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-building text-muted" style="font-size:4rem;opacity:.3"></i>
+            <h5 class="mt-3 text-muted">Nenhum prédio cadastrado</h5>
+            <a href="/estrutura/predios/novo/" class="btn btn-primary btn-sm mt-2">
+                <i class="bi bi-plus me-1"></i>Cadastrar Prédio
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

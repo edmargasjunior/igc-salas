@@ -1,0 +1,85 @@
+{% extends "base/base.html" %}
+{% block title %}{% if turma %}Editar Turma{% else %}Nova Turma{% endif %}{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/academico/turmas/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">
+            {% if turma %}<i class="bi bi-pencil text-primary me-2"></i>Editar Turma
+            {% else %}<i class="bi bi-plus-circle text-primary me-2"></i>Nova Turma{% endif %}
+        </h4>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-medium">Disciplina *</label>
+                        <select name="disciplina_id" class="form-select" required>
+                            <option value="">Selecione a disciplina...</option>
+                            {% for d in disciplinas %}
+                            <option value="{{ d.pk }}" {% if turma.disciplina.pk == d.pk %}selected{% endif %}>
+                                {{ d.codigo }} — {{ d.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Código da Turma *</label>
+                        <input type="text" name="codigo" class="form-control" required maxlength="20"
+                               value="{{ turma.codigo|default:'' }}" placeholder="T1, A, 01...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Professor</label>
+                        <select name="professor_id" class="form-select">
+                            <option value="">Não atribuído</option>
+                            {% for p in professores %}
+                            <option value="{{ p.pk }}" {% if turma.professor.pk == p.pk %}selected{% endif %}>
+                                {{ p.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-medium">Ano *</label>
+                        <input type="number" name="ano" class="form-control" required min="2020" max="2030"
+                               value="{{ turma.ano|default:ano_atual }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-medium">Semestre *</label>
+                        <select name="semestre" class="form-select" required>
+                            <option value="1" {% if turma.semestre == '1' %}selected{% endif %}>1º Semestre</option>
+                            <option value="2" {% if turma.semestre == '2' %}selected{% endif %}>2º Semestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Vagas</label>
+                        <input type="number" name="vagas" class="form-control" min="1" max="500"
+                               value="{{ turma.vagas|default:40 }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Matriculados</label>
+                        <input type="number" name="matriculados" class="form-control" min="0"
+                               value="{{ turma.matriculados|default:0 }}">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="/academico/turmas/" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if turma %}Salvar{% else %}Criar Turma{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

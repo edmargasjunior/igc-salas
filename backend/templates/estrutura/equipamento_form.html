@@ -1,0 +1,103 @@
+{% extends "base/base.html" %}
+{% block title %}{% if equipamento %}Editar{% else %}Novo{% endif %} Equipamento{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/estrutura/equipamentos/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">
+            {% if equipamento %}<i class="bi bi-pencil text-primary me-2"></i>Editar Equipamento
+            {% else %}<i class="bi bi-plus-circle text-primary me-2"></i>Novo Equipamento{% endif %}
+        </h4>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-medium">Nome *</label>
+                        <input type="text" name="nome" class="form-control" required
+                               value="{{ equipamento.nome|default:'' }}" placeholder="Ex.: Projetor Epson, Microscópio...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Quantidade</label>
+                        <input type="number" name="quantidade" class="form-control" min="1" value="{{ equipamento.quantidade|default:1 }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Nº Patrimônio</label>
+                        <input type="text" name="patrimonio" class="form-control"
+                               value="{{ equipamento.patrimonio|default:'' }}" placeholder="12345">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Número de Série</label>
+                        <input type="text" name="numero_serie" class="form-control"
+                               value="{{ equipamento.numero_serie|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Modelo</label>
+                        <input type="text" name="modelo" class="form-control"
+                               value="{{ equipamento.modelo|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Fabricante</label>
+                        <input type="text" name="fabricante" class="form-control"
+                               value="{{ equipamento.fabricante|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Sala *</label>
+                        <select name="sala_id" class="form-select" required>
+                            <option value="">Selecione a sala...</option>
+                            {% for s in salas %}
+                            <option value="{{ s.pk }}" {% if equipamento.sala.pk == s.pk %}selected{% endif %}>
+                                {{ s.codigo }} — {{ s.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Estado de Conservação</label>
+                        <select name="estado_conservacao" class="form-select">
+                            {% for val, label in estado_choices %}
+                            <option value="{{ val }}" {% if equipamento.estado_conservacao == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Data de Aquisição</label>
+                        <input type="date" name="data_aquisicao" class="form-control"
+                               value="{{ equipamento.data_aquisicao|date:'Y-m-d'|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Garantia até</label>
+                        <input type="date" name="data_garantia" class="form-control"
+                               value="{{ equipamento.data_garantia|date:'Y-m-d'|default:'' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Valor Aquisição (R$)</label>
+                        <input type="number" name="valor_aquisicao" class="form-control" step="0.01" min="0"
+                               value="{{ equipamento.valor_aquisicao|default:'' }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="2">{{ equipamento.observacoes|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="/estrutura/equipamentos/" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if equipamento %}Salvar{% else %}Cadastrar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

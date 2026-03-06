@@ -1,0 +1,105 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ disciplina.nome }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Início</a></li>
+            <li class="breadcrumb-item active">{{ disciplina.codigo }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Info da disciplina -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top:80px">
+                <div class="card-body p-4">
+                    <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-center mb-3">
+                        <i class="bi bi-book-half text-primary" style="font-size:2.5rem"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">{{ disciplina.nome }}</h5>
+                    <code class="text-muted">{{ disciplina.codigo }}</code>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="text-muted">Carga Horária</span>
+                        <span class="fw-medium">{{ disciplina.carga_horaria }}h</span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="text-muted">Créditos</span>
+                        <span class="fw-medium">{{ disciplina.creditos }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="text-muted">Modalidade</span>
+                        <span class="badge bg-primary-subtle text-primary">{{ disciplina.get_modalidade_display }}</span>
+                    </div>
+                    {% if disciplina.departamento %}
+                    <div class="d-flex justify-content-between small">
+                        <span class="text-muted">Departamento</span>
+                        <span class="fw-medium">{{ disciplina.departamento }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if disciplina.ementa %}
+                    <hr>
+                    <h6 class="fw-bold small text-uppercase text-muted mb-2">Ementa</h6>
+                    <p class="text-muted small mb-0">{{ disciplina.ementa|truncatechars:200 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Turmas -->
+        <div class="col-md-8">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-people text-primary me-2"></i>
+                Turmas — {{ turmas|length }} turma(s) ativa(s)
+            </h5>
+
+            {% for turma in turmas %}
+            <div class="card border-0 shadow-sm rounded-3 mb-3">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-2 bg-primary bg-opacity-10 px-3 py-2 text-center" style="min-width:60px">
+                                <div class="fw-bold text-primary">{{ turma.codigo }}</div>
+                                <div class="text-muted small">{{ turma.periodo }}</div>
+                            </div>
+                            <div>
+                                {% if turma.professor %}
+                                <a href="/professor/{{ turma.professor.slug }}/" class="fw-medium text-dark text-decoration-none">
+                                    {{ turma.professor.nome }}
+                                </a>
+                                <br><small class="text-muted">{{ turma.professor.get_titulacao_display }}</small>
+                                {% else %}
+                                <span class="text-muted">Professor não atribuído</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">{{ turma.matriculados }}/{{ turma.vagas }}</div>
+                            <small class="text-muted">matriculados</small>
+                            <br>
+                            <a href="/turma/{{ turma.slug }}/" class="btn btn-outline-primary btn-sm mt-1">
+                                Ver horários
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-people text-muted" style="font-size:3rem;opacity:.3"></i>
+                <p class="mt-3 text-muted">Nenhuma turma ativa para esta disciplina.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

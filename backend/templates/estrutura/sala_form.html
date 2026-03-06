@@ -1,0 +1,192 @@
+{% extends "base/base.html" %}
+{% block title %}{% if sala %}Editar{% else %}Nova{% endif %} Sala{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:800px">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/estrutura/salas/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">
+            {% if sala %}<i class="bi bi-pencil text-primary me-2"></i>Editar Sala{{ sala.nome }}
+            {% else %}<i class="bi bi-plus-circle text-primary me-2"></i>Nova Sala{% endif %}
+        </h4>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <!-- Identificação -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Identificação</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-medium">Código *</label>
+                        <input type="text" name="codigo" class="form-control" required
+                               value="{{ sala.codigo|default:'' }}" placeholder="LAB-GEO-01">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Nome *</label>
+                        <input type="text" name="nome" class="form-control" required
+                               value="{{ sala.nome|default:'' }}" placeholder="Laboratório de Geologia">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-medium">Tipo *</label>
+                        <select name="tipo" class="form-select" required>
+                            {% for val, label in tipo_choices %}
+                            <option value="{{ val }}" {% if sala.tipo == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Localização -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2 mt-2">Localização</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Prédio *</label>
+                        <select name="predio_id" class="form-select" required id="predioSelect" onchange="carregarAndares()">
+                            <option value="">Selecione o prédio...</option>
+                            {% for p in predios %}
+                            <option value="{{ p.pk }}" {% if sala.andar.predio.pk == p.pk %}selected{% endif %}>
+                                {{ p.codigo }} — {{ p.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Andar *</label>
+                        <select name="andar_id" class="form-select" required id="andarSelect">
+                            <option value="">Selecione o andar...</option>
+                            {% for a in andares %}
+                            <option value="{{ a.pk }}" {% if sala.andar.pk == a.pk %}selected{% endif %}>
+                                {{ a.nome_display }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Capacidade -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2 mt-2">Capacidade e Dimensões</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Capacidade (pessoas)</label>
+                        <input type="number" name="capacidade" class="form-control" min="1" max="500"
+                               value="{{ sala.capacidade|default:30 }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Área (m²)</label>
+                        <input type="number" name="area_m2" class="form-control" step="0.01" min="0"
+                               value="{{ sala.area_m2|default:'' }}" placeholder="Ex.: 45.50">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Status</label>
+                        <select name="status" class="form-select">
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if sala.status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Recursos -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2 mt-2">Recursos Disponíveis</h6>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_projetor" id="chkProjetor"
+                                   {% if sala.tem_projetor %}checked{% endif %}>
+                            <label class="form-check-label" for="chkProjetor">Projetor</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_ar_condicionado" id="chkAC"
+                                   {% if sala.tem_ar_condicionado %}checked{% endif %}>
+                            <label class="form-check-label" for="chkAC">Ar-Condicionado</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_lousa_digital" id="chkLousa"
+                                   {% if sala.tem_lousa_digital %}checked{% endif %}>
+                            <label class="form-check-label" for="chkLousa">Lousa Digital</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_videoconferencia" id="chkVideo"
+                                   {% if sala.tem_videoconferencia %}checked{% endif %}>
+                            <label class="form-check-label" for="chkVideo">Videoconferência</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_acessibilidade" id="chkAcess"
+                                   {% if sala.tem_acessibilidade %}checked{% endif %}>
+                            <label class="form-check-label" for="chkAcess">Acessibilidade</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="tem_computadores" id="chkComp"
+                                   {% if sala.tem_computadores %}checked{% endif %} onchange="toggleComputadores()">
+                            <label class="form-check-label" for="chkComp">Computadores</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4" id="qtdComputadores" {% if not sala.tem_computadores %}style="display:none"{% endif %}>
+                        <label class="form-label fw-medium">Qtd. Computadores</label>
+                        <input type="number" name="qtd_computadores" class="form-control" min="0"
+                               value="{{ sala.qtd_computadores|default:0 }}">
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a sala...">{{ sala.observacoes|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="/estrutura/salas/" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if sala %}Salvar Alterações{% else %}Criar Sala{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleComputadores() {
+    const show = document.getElementById('chkComp').checked;
+    document.getElementById('qtdComputadores').style.display = show ? '' : 'none';
+}
+
+function carregarAndares() {
+    const predioId = document.getElementById('predioSelect').value;
+    const andarSelect = document.getElementById('andarSelect');
+    if (!predioId) {
+        andarSelect.innerHTML = '<option value="">Selecione o prédio primeiro...</option>';
+        return;
+    }
+    fetch(`/api/v1/estrutura/andares/?predio=${predioId}`)
+        .then(r => r.json())
+        .then(data => {
+            andarSelect.innerHTML = '<option value="">Selecione o andar...</option>';
+            (data.results || data).forEach(a => {
+                andarSelect.innerHTML += `<option value="${a.id}">${a.nome || 'Andar ' + a.numero}</option>`;
+            });
+        }).catch(() => {
+            andarSelect.innerHTML = '<option value="">Erro ao carregar andares</option>';
+        });
+}
+</script>
+{% endblock %}

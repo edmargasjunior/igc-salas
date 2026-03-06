@@ -50,7 +50,7 @@ EOF
 
 # Carregar dados iniciais
 echo "[*] Carregando dados iniciais..."
-python manage.py loaddata initial_data 2>/dev/null || echo "[INFO] Sem dados iniciais para carregar"
+python manage.py loaddata apps/core/fixtures/initial_data.json 2>/dev/null || echo "[INFO] Fixture não encontrada ou já carregada"
 
 echo ""
 echo "============================================"

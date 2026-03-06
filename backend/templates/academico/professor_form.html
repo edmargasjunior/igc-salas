@@ -1,0 +1,94 @@
+{% extends "base/base.html" %}
+{% block title %}{% if professor %}Editar Professor{% else %}Novo Professor{% endif %}{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/academico/professores/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">
+            {% if professor %}<i class="bi bi-pencil text-primary me-2"></i>Editar Professor
+            {% else %}<i class="bi bi-person-plus text-primary me-2"></i>Novo Professor{% endif %}
+        </h4>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if not professor %}
+                <div class="col-12">
+                    <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Conta de Acesso</h6>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Primeiro Nome *</label>
+                        <input type="text" name="first_name" class="form-control" required placeholder="João">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Último Nome *</label>
+                        <input type="text" name="last_name" class="form-control" required placeholder="Silva">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">E-mail *</label>
+                        <input type="email" name="email" class="form-control" required placeholder="joao.silva@ufmg.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Senha inicial *</label>
+                        <input type="password" name="password" class="form-control" required minlength="8">
+                    </div>
+                </div>
+                {% endif %}
+
+                <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Dados Acadêmicos</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">SIAPE *</label>
+                        <input type="text" name="siape" class="form-control" required maxlength="20"
+                               value="{{ professor.siape|default:'' }}" placeholder="1234567">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Titulação</label>
+                        <select name="titulacao" class="form-select">
+                            {% for val, label in titulacao_choices %}
+                            <option value="{{ val }}" {% if professor.titulacao == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Departamento</label>
+                        <input type="text" name="departamento" class="form-control"
+                               value="{{ professor.usuario.departamento|default:'' }}" placeholder="Geologia">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Área de Atuação</label>
+                        <input type="text" name="area_atuacao" class="form-control"
+                               value="{{ professor.area_atuacao|default:'' }}" placeholder="Petrologia, Geoquímica...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Telefone</label>
+                        <input type="text" name="telefone" class="form-control"
+                               value="{{ professor.usuario.telefone|default:'' }}" placeholder="(31) 99999-9999">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Link Lattes</label>
+                        <input type="url" name="lattes" class="form-control"
+                               value="{{ professor.lattes|default:'' }}" placeholder="http://lattes.cnpq.br/...">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="/academico/professores/" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>
+                        {% if professor %}Salvar{% else %}Cadastrar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

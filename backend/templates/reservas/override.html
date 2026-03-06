@@ -1,0 +1,113 @@
+{% extends "base/base.html" %}
+{% block title %}Override de Reserva #{{ reserva.pk }}{% endblock %}
+{% block extra_css %}<link href="/static/css/igc_dashboard.css" rel="stylesheet">{% endblock %}
+{% block main_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/reservas/{{ reserva.pk }}/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <div>
+            <h4 class="fw-bold mb-0 text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>Override Administrativo
+            </h4>
+            <p class="text-muted mb-0 small">Reserva #{{ reserva.pk }} — Substitui a reserva atual e notifica o solicitante</p>
+        </div>
+    </div>
+
+    <!-- Reserva sendo substituída -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4 border-start border-danger border-3">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-danger mb-3"><i class="bi bi-x-circle me-2"></i>Reserva a ser Substituída</h6>
+            <div class="row g-2">
+                <div class="col-sm-6">
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="text-muted small">Sala:</span>
+                        <span class="fw-medium small">{{ reserva.sala.codigo }} — {{ reserva.sala.nome }}</span>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="text-muted small">Solicitante:</span>
+                        <span class="fw-medium small">{{ reserva.solicitante.nome_completo }}</span>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="text-muted small">Data:</span>
+                        <span class="fw-medium small">{{ reserva.data_inicio|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="text-muted small">Horário:</span>
+                        <span class="fw-medium small">{{ reserva.hora_inicio|time:"H:i" }} – {{ reserva.hora_fim|time:"H:i" }}</span>
+                    </div>
+                    {% if reserva.turma %}
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="text-muted small">Turma:</span>
+                        <span class="fw-medium small">{{ reserva.turma }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <span class="text-muted small">Status:</span>
+                        <span class="badge bg-warning text-dark small">{{ reserva.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário Override -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h6 class="fw-bold mb-4"><i class="bi bi-check-circle text-success me-2"></i>Nova Reserva (Substituição)</h6>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="alert alert-danger d-flex gap-2 mb-4">
+                    <i class="bi bi-shield-exclamation flex-shrink-0 mt-1"></i>
+                    <div class="small">
+                        <strong>Ação irreversível:</strong> A reserva atual será marcada como <em>Substituída</em>,
+                        o professor {{ reserva.solicitante.first_name }} receberá uma notificação com o motivo informado,
+                        e o log será registrado permanentemente.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Motivo do Override *</label>
+                    <textarea name="motivo" class="form-control" rows="3" required
+                              placeholder="Descreva o motivo administrativo para substituir esta reserva..."></textarea>
+                    <div class="form-text">Este motivo será enviado por notificação ao professor afetado.</div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Nova Data</label>
+                        <input type="date" name="data_inicio" class="form-control" value="{{ reserva.data_inicio|date:'Y-m-d' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Hora Início</label>
+                        <input type="time" name="hora_inicio" class="form-control" value="{{ reserva.hora_inicio|time:'H:i' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Hora Fim</label>
+                        <input type="time" name="hora_fim" class="form-control" value="{{ reserva.hora_fim|time:'H:i' }}">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-medium">Motivo da Nova Reserva (opcional)</label>
+                    <input type="text" name="motivo_nova" class="form-control" placeholder="Ex.: Defesa de tese, Evento institucional...">
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="/reservas/{{ reserva.pk }}/" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Confirmar override? Esta ação não pode ser desfeita.')">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Override
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
